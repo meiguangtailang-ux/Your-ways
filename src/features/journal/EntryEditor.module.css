@@ -1,0 +1,37 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 10rem;
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  line-height: 1.9;
+  resize: vertical;
+}
+
+.textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+.textarea:focus-visible {
+  border-color: var(--gold);
+  outline: 1px solid var(--gold);
+  outline-offset: 0;
+}
+
+.save {
+  margin-left: auto;
+}
+
+.confirm {
+  flex: 1;
+  font-size: var(--text-sm);
+}

@@ -1,0 +1,48 @@
+.bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: var(--page-width);
+  height: var(--tabbar-height);
+  margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: var(--ink-faint);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.active {
+  color: var(--ink);
+}
+
+.active svg {
+  color: var(--gold-ink);
+}
+
+/* 選択中のタブの上に置く、金の短い線 */
+.active::before {
+  position: absolute;
+  top: -1px;
+  width: 2rem;
+  height: 2px;
+  background: var(--gold);
+  content: '';
+}

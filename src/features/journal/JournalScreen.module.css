@@ -1,0 +1,9 @@
+.screen {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--space-5) calc(var(--tabbar-height) + var(--space-6));
+}
+
+.list {
+  margin-top: var(--space-3);
+}

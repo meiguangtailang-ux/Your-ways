@@ -1,0 +1,122 @@
+/* 本文。紙の聖書のように、明朝体・ゆったりした行間で組む */
+.chapter {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  line-height: 1.95;
+  letter-spacing: 0.03em;
+  line-break: strict;
+  overflow-wrap: anywhere;
+}
+
+/* ふりがなの分だけ行間を広げ、行の高さがそろうようにする */
+.withRuby {
+  line-height: 2.1;
+}
+
+.chapter rt {
+  color: var(--ink-soft);
+  font-size: 0.5em;
+  font-weight: 500;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.paragraph {
+  margin-block: 0.9em;
+  text-align: justify;
+}
+
+/* 詩：節番号は左の余白に置き、行の頭をそろえる。折り返した行は1字下げる */
+.stanza {
+  margin-block: 0.9em;
+}
+
+.line {
+  padding-left: 3em;
+  text-indent: -1em;
+}
+
+/*
+ * 番号を左の余白（本文の2字ぶん）に収める。
+ * 番号の文字は本文の 0.625 倍なので、2字ぶんの幅は 2 ÷ 0.625 = 3.2em。
+ * 幅と同じだけ左へ引き戻すことで、番号のある行と無い行の本文の頭がそろう。
+ */
+.line .number {
+  display: inline-block;
+  top: -0.1em;
+  width: 3.2em;
+  margin-inline: -3.2em 0;
+  padding-right: 0.8em;
+  text-align: right;
+  text-indent: 0;
+}
+
+.title {
+  margin-block: 1.2em 0.6em;
+  /* 詩の本文の行頭（2字下げ）にそろえる */
+  padding-left: calc(2em / 0.875);
+  color: var(--ink-soft);
+  font-size: 0.875em;
+  line-height: 1.9;
+}
+
+.verse {
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.number {
+  position: relative;
+  top: -0.5em;
+  margin-inline: 0.15em 0.3em;
+  color: var(--gold-ink);
+  font-family: var(--font-ui);
+  font-size: 0.625em;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  user-select: none;
+}
+
+.text {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background-color 0.15s;
+}
+
+/* 選択中：淡い金の地 */
+.selected .text {
+  background-color: var(--gold-wash);
+}
+
+/* 線：文字の下半分に、金色のマーカー */
+.highlighted .text {
+  background-image: linear-gradient(
+    transparent 50%,
+    var(--marker) 50%,
+    var(--marker) 94%,
+    transparent 94%
+  );
+}
+
+/* しおりやメモから開いたとき、その節をしばらく光らせて知らせる */
+.focused .text {
+  animation: glow 2.6s ease-out;
+}
+
+@keyframes glow {
+  0%,
+  45% {
+    background-color: var(--gold-wash);
+  }
+}
+
+.mark {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-left: 0.25em;
+  color: var(--gold);
+  vertical-align: -0.05em;
+}

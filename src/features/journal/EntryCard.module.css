@@ -1,0 +1,63 @@
+.card {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+}
+
+.kind {
+  padding: 1px var(--space-2);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  color: var(--gold-ink);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.edit {
+  min-height: 2rem;
+  margin-left: auto;
+  padding: 0 var(--space-2);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reference {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--gold-ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-underline-offset: 3px;
+}
+
+.quote {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.body {
+  margin-top: var(--space-2);
+  font-family: var(--font-serif);
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

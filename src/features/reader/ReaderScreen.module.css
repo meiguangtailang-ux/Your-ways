@@ -1,0 +1,75 @@
+.page {
+  position: relative;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--space-5) calc(var(--tabbar-height) + var(--space-6));
+}
+
+/* 操作バーが出ているあいだは、最後の節が隠れないように下の余白を広げる */
+.selecting {
+  padding-bottom: 12rem;
+}
+
+/* しおりをはさんだ章の右上に下がる、金のしおりひも */
+.ribbon {
+  position: absolute;
+  top: 0;
+  right: var(--space-6);
+  width: 14px;
+  height: 3rem;
+  background: var(--gold);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+}
+
+.heading {
+  padding: var(--space-7) 0 var(--space-5);
+  text-align: center;
+}
+
+.bookName {
+  color: var(--gold-ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  /* 字間の分だけ右に寄るのを打ち消す */
+  text-indent: 0.24em;
+}
+
+.chapterTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-1);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+/* 題の左右に引く、金の細い線 */
+.chapterTitle::before,
+.chapterTitle::after {
+  width: 2.5rem;
+  height: 1px;
+  background: var(--gold);
+  content: '';
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-7) 0;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.credit {
+  margin-top: var(--space-5);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  text-align: center;
+}

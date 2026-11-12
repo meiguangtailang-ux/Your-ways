@@ -1,0 +1,41 @@
+.books,
+.chapters {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* 書名が1行に収まる幅を保ち、画面の幅に合わせて列の数を変える（スマホで2〜3列） */
+.books {
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+}
+
+.chapters {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.cell {
+  min-height: 2.75rem;
+  padding: var(--space-1) 2px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.cell:active {
+  background: var(--paper-sunk);
+}
+
+.current {
+  border-color: var(--gold);
+  background: var(--gold-wash);
+  color: var(--gold-ink);
+  font-weight: 700;
+}
+
+.back {
+  margin-left: calc(var(--space-3) * -1);
+}

@@ -1,0 +1,42 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-5);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition:
+    background-color 0.15s,
+    opacity 0.15s;
+}
+
+.button:disabled {
+  opacity: 0.4;
+}
+
+.solid {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.outline {
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+.outline:active:not(:disabled) {
+  background: var(--paper-sunk);
+}
+
+.quiet {
+  padding: 0 var(--space-3);
+  color: var(--ink-soft);
+}
+
+.quiet:active:not(:disabled) {
+  background: var(--paper-sunk);
+}

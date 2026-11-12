@@ -1,0 +1,55 @@
+/*
+ * デザインの土台（色・文字・余白）。
+ * 色はクリーム・金・黒の3色だけ。濃淡もこの3色の範囲で作り、
+ * 青・赤・紫などの機能別カラーは足さない。
+ */
+:root {
+  /* クリーム（紙） */
+  --paper: #f7f1e1;
+  --paper-raised: #fcf8ee;
+  --paper-sunk: #efe7d2;
+  --rule: #ddd3bc;
+
+  /* 黒（墨） */
+  --ink: #1d1a16;
+  --ink-soft: #55504a;
+  --ink-faint: #8c857a;
+  --scrim: rgb(29 26 22 / 0.38);
+
+  /* 金 */
+  --gold: #b0892f;
+  --gold-ink: #7a5c1a;
+  --gold-wash: #f0e4c2;
+  --marker: rgb(214 172 62 / 0.5);
+
+  /* 文字：本文は明朝、操作まわりはゴシック */
+  --font-serif:
+    'Hiragino Mincho ProN', 'Yu Mincho', 'YuMincho', 'Shippori Mincho', 'Noto Serif JP', serif;
+  --font-ui:
+    'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', 'Noto Sans JP',
+    system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+
+  /* 余白・形 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-bar: 0 -6px 24px rgb(29 26 22 / 0.1);
+
+  /* レイアウト */
+  --page-width: 38rem;
+  --header-height: 3.25rem;
+  --tabbar-height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
