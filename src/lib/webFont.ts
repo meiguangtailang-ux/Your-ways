@@ -4,6 +4,12 @@
  * 入っていない端末（主に Android）でだけ Web フォントを取りにいく。
  */
 
+/** Web フォントの名前（tokens.css の --font-serif にも書いてある） */
+export const WEB_FONT_FAMILY = 'Shippori Mincho';
+
+/** 読み込んでいる太さ：本文と、見出し */
+export const WEB_FONT_WEIGHTS = { body: 500, heading: 700 } as const;
+
 /** tokens.css の --font-serif で、Web フォントより前に並べている端末フォント */
 const LOCAL_SERIF_FONTS = ['Hiragino Mincho ProN', 'Yu Mincho', 'YuMincho', 'Noto Serif JP'];
 

@@ -16,5 +16,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["server", "scripts", "shared", "vite.config.ts"]
+  "include": ["server", "scripts", "shared", "pwa", "vite.config.ts"]
 }

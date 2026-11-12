@@ -1,0 +1,55 @@
+.text {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.text:not(:first-child) {
+  margin-top: var(--space-5);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.note {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--gold-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* 進み具合の棒も、3色の中で描く */
+.progress {
+  flex: 1;
+  min-width: 6rem;
+  height: 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--paper-sunk);
+  appearance: none;
+}
+
+.progress::-webkit-progress-bar {
+  background: var(--paper-sunk);
+}
+
+.progress::-webkit-progress-value {
+  background: var(--gold);
+}
+
+.progress::-moz-progress-bar {
+  background: var(--gold);
+}

@@ -13,7 +13,11 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['server/**/*.ts', 'scripts/**/*.ts', '*.config.{js,ts}'],
+    files: ['server/**/*.ts', 'scripts/**/*.ts', 'pwa/**/*.ts', '*.config.{js,ts}'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    files: ['pwa/service-worker.js'],
+    languageOptions: { globals: { ...globals.serviceworker, __SHELL_URLS__: 'readonly' } },
   },
 );
