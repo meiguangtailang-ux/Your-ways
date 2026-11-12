@@ -1,13 +1,13 @@
-import { Bookmark, BookOpen, NotebookPen, type LucideIcon } from 'lucide-react';
+import { Bookmark, BookOpen, NotebookPen, Search, Settings, type LucideIcon } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router';
-import { useReaderPrefs } from '@/features/reader/readerPrefs';
+import { useLastRead } from '@/features/reader/lastRead';
 import { cx } from '@/lib/cx';
 import { readerPath, ROUTES } from '@/lib/routes';
 import styles from './TabBar.module.css';
 
-/** 画面の下端の切り替え：聖書・ノート・しおり */
+/** 画面の下端の切り替え：聖書・さがす・ノート・しおり・設定 */
 export function TabBar() {
-  const { lastRead } = useReaderPrefs();
+  const lastRead = useLastRead();
   const { pathname } = useLocation();
 
   return (
@@ -20,8 +20,10 @@ export function TabBar() {
           label="聖書"
           active={pathname.startsWith('/read')}
         />
+        <Tab to={ROUTES.search} icon={Search} label="さがす" />
         <Tab to={ROUTES.journal} icon={NotebookPen} label="ノート" />
         <Tab to={ROUTES.bookmarks} icon={Bookmark} label="しおり" />
+        <Tab to={ROUTES.settings} icon={Settings} label="設定" />
       </div>
     </nav>
   );
