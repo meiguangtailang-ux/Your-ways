@@ -1,0 +1,46 @@
+.screen {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--space-5) calc(var(--tabbar-height) + var(--space-6));
+}
+
+.section {
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--rule);
+}
+
+.title {
+  margin-bottom: var(--space-4);
+  color: var(--gold-ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.text {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.action {
+  margin-top: var(--space-4);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.facts dt {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--ink-soft);
+}

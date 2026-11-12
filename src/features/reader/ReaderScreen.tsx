@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import {
   chapterKey,
+  chapterUnit,
   findBook,
-  formatChapterTitle,
   formatRef,
   getVerseText,
   isBookId,
@@ -18,30 +18,27 @@ import {
 } from '@shared/bible';
 import { Button } from '@/components/Button';
 import { useChapter } from '@/features/bible/useChapter';
-import {
-  addBookmark,
-  findBookmark,
-  removeBookmark,
-  useBookmarks,
-  versesWithBookmarks,
-} from '@/features/bookmarks/bookmarkStore';
+import { findBookmark, versesWithBookmarks } from '@/features/bookmarks/bookmarkModel';
+import { addBookmark, removeBookmark, useBookmarks } from '@/features/bookmarks/bookmarkStore';
 import { setHighlight, useChapterHighlights } from '@/features/highlights/highlightStore';
 import { EntryEditor, type EditorTarget } from '@/features/journal/EntryEditor';
 import {
   entriesForVerses,
-  useJournal,
   versesWithEntries,
   type EntryKind,
-} from '@/features/journal/journalStore';
+} from '@/features/journal/journalModel';
+import { useJournal } from '@/features/journal/journalStore';
 import { VerseEntriesSheet } from '@/features/journal/VerseEntriesSheet';
+import { useDisplayPrefs } from '@/features/settings/displayPrefs';
+import { DisplaySheet } from '@/features/settings/DisplaySheet';
 import { TeacherSheet } from '@/features/teacher/TeacherSheet';
 import { cx } from '@/lib/cx';
 import { readerPath } from '@/lib/routes';
 import { ChapterNav } from './ChapterNav';
 import { ChapterView } from './ChapterView';
+import { rememberLocation } from './lastRead';
 import { PassagePicker } from './PassagePicker';
 import { ReaderHeader } from './ReaderHeader';
-import { rememberLocation, setShowRuby, useReaderPrefs } from './readerPrefs';
 import { SelectionBar } from './SelectionBar';
 import styles from './ReaderScreen.module.css';
 
@@ -68,6 +65,7 @@ export function ReaderScreen() {
 
 type OpenSheet =
   | { type: 'picker' }
+  | { type: 'display' }
   | { type: 'editor'; target: EditorTarget }
   | { type: 'entries' }
   | { type: 'teacher' };
@@ -80,7 +78,9 @@ interface ReaderProps {
 function Reader({ location, focusVerse }: ReaderProps) {
   const navigate = useNavigate();
   const { state, retry } = useChapter(location);
-  const { showRuby } = useReaderPrefs();
+  const { showRuby, textSize, writingMode } = useDisplayPrefs();
+  const vertical = writingMode === 'vertical';
+  const pageRef = useRef<HTMLElement>(null);
   const highlighted = useChapterHighlights(location);
   const journal = useJournal();
   const bookmarks = useBookmarks();
@@ -120,9 +120,17 @@ function Reader({ location, focusVerse }: ReaderProps) {
       return;
     }
     if (focusVerse) {
-      document.querySelector(`[data-verse="${focusVerse}"]`)?.scrollIntoView({ block: 'center' });
+      document
+        .querySelector(`[data-verse="${focusVerse}"]`)
+        ?.scrollIntoView({ block: 'center', inline: 'center' });
     }
   }, [chapter, focusVerse]);
+
+  // 縦書きは横へ読み進むので、マウスのホイール（縦の回転）でも先へ進めるようにする
+  const scrollSideways = (event: WheelEvent) => {
+    if (!vertical || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    pageRef.current?.scrollBy({ left: -event.deltaY });
+  };
 
   const closeSheet = () => setSheet(undefined);
   const clearSelection = () => setSelection([]);
@@ -175,19 +183,29 @@ function Reader({ location, focusVerse }: ReaderProps) {
     <>
       <ReaderHeader
         location={location}
-        showRuby={showRuby}
         bookmarked={chapterBookmark !== undefined}
         onOpenPicker={() => setSheet({ type: 'picker' })}
-        onToggleRuby={() => setShowRuby(!showRuby)}
+        onOpenDisplay={() => setSheet({ type: 'display' })}
         onToggleBookmark={() => chapter && toggleChapterBookmark(chapter)}
       />
 
-      <main className={cx(styles.page, selection.length > 0 && styles.selecting)}>
+      <main
+        ref={pageRef}
+        className={cx(
+          styles.page,
+          vertical && styles.vertical,
+          selection.length > 0 && styles.selecting,
+        )}
+        onWheel={scrollSideways}
+      >
         {chapterBookmark && <span className={styles.ribbon} aria-hidden />}
         <header className={styles.heading}>
           <p className={styles.bookName}>{book.name}</p>
           <h1 className={styles.chapterTitle}>
-            {formatChapterTitle(location.book, location.chapter)}
+            <span>
+              第<span className={styles.chapterNumber}>{location.chapter}</span>
+              {chapterUnit(location.book)}
+            </span>
           </h1>
         </header>
 
@@ -203,6 +221,8 @@ function Reader({ location, focusVerse }: ReaderProps) {
             <ChapterView
               chapter={chapter}
               showRuby={showRuby}
+              textSize={textSize}
+              vertical={vertical}
               selected={selected}
               highlighted={highlighted}
               noted={noted}
@@ -210,7 +230,7 @@ function Reader({ location, focusVerse }: ReaderProps) {
               focusVerse={focusVerse}
               onToggleVerse={toggleVerse}
             />
-            <ChapterNav location={location} />
+            <ChapterNav location={location} vertical={vertical} />
             <p className={styles.credit}>{translation.credit}</p>
           </>
         )}
@@ -241,6 +261,7 @@ function Reader({ location, focusVerse }: ReaderProps) {
           onClose={closeSheet}
         />
       )}
+      {sheet?.type === 'display' && <DisplaySheet onClose={closeSheet} />}
       {sheet?.type === 'editor' && (
         <EntryEditor target={sheet.target} onDone={clearSelection} onClose={closeSheet} />
       )}

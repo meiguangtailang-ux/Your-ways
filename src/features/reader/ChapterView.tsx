@@ -2,13 +2,27 @@ import { Bookmark, PenLine } from 'lucide-react';
 import { memo, useMemo, type KeyboardEvent, type MouseEvent } from 'react';
 import type { ChapterData } from '@shared/bible';
 import { RubyText } from '@/features/bible/RubyText';
+import type { TextSize } from '@/features/settings/displayPrefs';
 import { cx } from '@/lib/cx';
 import { layoutChapter, type PlacedSegment } from './chapterLayout';
 import styles from './ChapterView.module.css';
 
+const SIZE_CLASS: Record<TextSize, string | undefined> = {
+  small: styles.sizeSmall,
+  medium: undefined,
+  large: styles.sizeLarge,
+  xlarge: styles.sizeXlarge,
+};
+
+/** 縦書きで、節番号を1文字ぶんの幅に横並びで収める（縦中横）のは、この文字数まで */
+const UPRIGHT_NUMBER_MAX_LENGTH = 3;
+
 interface ChapterViewProps {
   chapter: ChapterData;
   showRuby: boolean;
+  textSize: TextSize;
+  /** 縦書きで組む */
+  vertical: boolean;
   /** 選択中の節 */
   selected: ReadonlySet<number>;
   /** 線が引かれている節 */
@@ -26,6 +40,8 @@ interface ChapterViewProps {
 export function ChapterView({
   chapter,
   showRuby,
+  textSize,
+  vertical,
   selected,
   highlighted,
   noted,
@@ -66,7 +82,12 @@ export function ChapterView({
 
   return (
     <div
-      className={cx(styles.chapter, showRuby && styles.withRuby)}
+      className={cx(
+        styles.chapter,
+        SIZE_CLASS[textSize],
+        showRuby && styles.withRuby,
+        vertical && styles.vertical,
+      )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
@@ -103,6 +124,11 @@ export function ChapterView({
 function verseOf(target: EventTarget): number | undefined {
   const element = (target as HTMLElement).closest<HTMLElement>('[data-verse]');
   return element ? Number(element.dataset.verse) : undefined;
+}
+
+function VerseNumber({ label }: { label: string }) {
+  const upright = label.length <= UPRIGHT_NUMBER_MAX_LENGTH;
+  return <span className={cx(styles.number, upright && styles.upright)}>{label}</span>;
 }
 
 /**
@@ -145,7 +171,7 @@ const VerseSegment = memo(function VerseSegment({
       // キーボードでは、節番号のある先頭のかたまりから選択できる
       {...(showNumber && { role: 'button', tabIndex: 0, 'aria-pressed': selected })}
     >
-      {showNumber && <span className={styles.number}>{seg.label ?? seg.v}</span>}
+      {showNumber && <VerseNumber label={seg.label ?? String(seg.v)} />}
       {showNumber && NO_BREAK}
       <span className={styles.text}>
         <RubyText text={seg.text} showRuby={showRuby} />

@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { IconButton } from '@/components/IconButton';
-import type { EntryKind } from '@/features/journal/journalStore';
+import type { EntryKind } from '@/features/journal/journalModel';
 import { TEACHER_NAME } from '@/config/app';
 import styles from './SelectionBar.module.css';
 

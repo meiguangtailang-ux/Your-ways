@@ -43,3 +43,33 @@
   font-size: var(--text-xs);
   font-weight: 500;
 }
+
+/*
+ * 縦書きのとき：本文の左どなりに、横書きの小さな欄として置く。
+ * 縦書きでは「次」は左へ進むので、向きのある矢印は出さず、次の章を上に並べる。
+ */
+.vertical {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin: 0 var(--space-6) 0 0;
+  padding: 0 var(--space-5) 0 0;
+  border-top: 0;
+  border-right: 1px solid var(--rule);
+  writing-mode: horizontal-tb;
+}
+
+.vertical .link {
+  justify-content: flex-start;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.vertical .next {
+  order: -1;
+}
+
+.vertical svg,
+.vertical > span {
+  display: none;
+}

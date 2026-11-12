@@ -1,26 +1,23 @@
 import { Bookmark, ChevronDown } from 'lucide-react';
 import { chapterUnit, findBook, translation, type ChapterLocation } from '@shared/bible';
 import { IconButton } from '@/components/IconButton';
-import { cx } from '@/lib/cx';
 import styles from './ReaderHeader.module.css';
 
 interface ReaderHeaderProps {
   location: ChapterLocation;
-  showRuby: boolean;
   /** この章にしおりがはさまれているか */
   bookmarked: boolean;
   onOpenPicker: () => void;
-  onToggleRuby: () => void;
+  onOpenDisplay: () => void;
   onToggleBookmark: () => void;
 }
 
-/** 読む画面の上端。いまの箇所（押すと書・章を選べる）と、表示の切り替え */
+/** 読む画面の上端。いまの箇所（押すと書・章を選べる）、表示の設定、章のしおり */
 export function ReaderHeader({
   location,
-  showRuby,
   bookmarked,
   onOpenPicker,
-  onToggleRuby,
+  onOpenDisplay,
   onToggleBookmark,
 }: ReaderHeaderProps) {
   const book = findBook(translation, location.book);
@@ -45,11 +42,12 @@ export function ReaderHeader({
         </button>
         <button
           type="button"
-          className={cx(styles.rubyToggle, showRuby && styles.on)}
-          aria-pressed={showRuby}
-          onClick={onToggleRuby}
+          className={styles.display}
+          aria-haspopup="dialog"
+          aria-label="表示の設定（文字の大きさ・ふりがな・縦書き・配色）"
+          onClick={onOpenDisplay}
         >
-          ふりがな
+          表示
         </button>
         <IconButton
           label={bookmarked ? 'この章のしおりを外す' : 'この章にしおりをはさむ'}

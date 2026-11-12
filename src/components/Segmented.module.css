@@ -6,9 +6,10 @@
 }
 
 .option {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 2.25rem;
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-2);
+  white-space: nowrap;
   border-radius: 999px;
   color: var(--ink-soft);
   font-size: var(--text-sm);

@@ -20,12 +20,16 @@ interface SheetProps {
  */
 export function Sheet({ title, caption, tall, onClose, children }: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
+    // 開いたら、入力欄（data-autofocus を付けたもの）があればそこへ、無ければシート自体へ
+    // フォーカスを移す。ブラウザに任せると「閉じる」ボタンに移り、開いただけで枠が付いて目立つ
+    (dialog.querySelector<HTMLElement>('[data-autofocus]') ?? panelRef.current)?.focus();
     return () => dialog.close();
   }, []);
 
@@ -43,7 +47,7 @@ export function Sheet({ title, caption, tall, onClose, children }: SheetProps) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className={cx(styles.panel, tall && styles.tall)}>
+      <div ref={panelRef} tabIndex={-1} className={cx(styles.panel, tall && styles.tall)}>
         <header className={styles.header}>
           <div className={styles.heading}>
             <h2 id={titleId} className={styles.title}>

@@ -4,7 +4,9 @@
  * 青・赤・紫などの機能別カラーは足さない。
  */
 :root {
-  /* クリーム（紙） */
+  color-scheme: light;
+
+  /* クリーム（紙）。--paper を変えるときは shared/appInfo.ts の PAPER_COLOR も合わせる */
   --paper: #f7f1e1;
   --paper-raised: #fcf8ee;
   --paper-sunk: #efe7d2;
@@ -21,6 +23,13 @@
   --gold-ink: #7a5c1a;
   --gold-wash: #f0e4c2;
   --marker: rgb(214 172 62 / 0.5);
+  /* 金色のマーカーの線：文字の下半分に引く */
+  --marker-line: linear-gradient(
+    transparent 50%,
+    var(--marker) 50%,
+    var(--marker) 94%,
+    transparent 94%
+  );
 
   /* 文字：本文は明朝、操作まわりはゴシック */
   --font-serif:
@@ -52,4 +61,29 @@
   --page-width: 38rem;
   --header-height: 3.25rem;
   --tabbar-height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/*
+ * 夜の配色。同じ3色のまま、地を黒・文字をクリームに入れ替える。
+ * <html data-theme="dark"> のときに有効になる（src/features/settings/theme.ts）。
+ */
+:root[data-theme='dark'] {
+  --paper: #1a1815;
+  --paper-raised: #24211c;
+  --paper-sunk: #100f0d;
+  --rule: #3b362d;
+
+  --ink: #efe7d2;
+  --ink-soft: #b8af9b;
+  --ink-faint: #847c6c;
+  --scrim: rgb(0 0 0 / 0.6);
+
+  --gold: #c7a14c;
+  --gold-ink: #dbbb6c;
+  --gold-wash: #3d341f;
+  --marker: rgb(199 161 76 / 0.42);
+
+  --shadow-bar: 0 -6px 24px rgb(0 0 0 / 0.5);
+
+  color-scheme: dark;
 }

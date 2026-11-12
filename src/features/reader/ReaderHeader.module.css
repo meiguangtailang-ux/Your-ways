@@ -45,19 +45,18 @@
   margin-left: var(--space-1);
 }
 
-.rubyToggle {
+.display {
   flex: none;
   min-height: 2rem;
   padding: 0 var(--space-3);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--gold);
   border-radius: 999px;
-  color: var(--ink-faint);
+  color: var(--gold-ink);
   font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
 }
 
-.rubyToggle.on {
-  border-color: var(--gold);
-  color: var(--gold-ink);
+.display:active {
+  background: var(--paper-sunk);
 }

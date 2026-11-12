@@ -6,7 +6,7 @@
 }
 
 /* 操作バーが出ているあいだは、最後の節が隠れないように下の余白を広げる */
-.selecting {
+.selecting:not(.vertical) {
   padding-bottom: 12rem;
 }
 
@@ -22,7 +22,7 @@
 }
 
 .heading {
-  padding: var(--space-7) 0 var(--space-5);
+  padding-block: var(--space-7) var(--space-5);
   text-align: center;
 }
 
@@ -32,7 +32,7 @@
   font-size: var(--text-sm);
   font-weight: 700;
   letter-spacing: 0.24em;
-  /* 字間の分だけ右に寄るのを打ち消す */
+  /* 字間の分だけ後ろに寄るのを打ち消す */
   text-indent: 0.24em;
 }
 
@@ -41,18 +41,18 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-4);
-  margin-top: var(--space-1);
+  margin-block-start: var(--space-1);
   font-family: var(--font-serif);
   font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: 0.16em;
 }
 
-/* 題の左右に引く、金の細い線 */
+/* 題の前後に引く、金の細い線 */
 .chapterTitle::before,
 .chapterTitle::after {
-  width: 2.5rem;
-  height: 1px;
+  inline-size: 2.5rem;
+  block-size: 1px;
   background: var(--gold);
   content: '';
 }
@@ -67,9 +67,57 @@
   font-size: var(--text-sm);
 }
 
+/* 奥付のように、本文と同じ明朝で小さく添える（縦書きでも正しく組める書体を使う） */
 .credit {
-  margin-top: var(--space-5);
+  margin-block-start: var(--space-5);
   color: var(--ink-soft);
+  font-family: var(--font-serif);
   font-size: var(--text-xs);
   text-align: center;
+}
+
+/*
+ * 縦書き：紙の聖書と同じく、上から下へ・右から左へ読み進む。
+ * 見出しとタブバーのあいだの高さいっぱいに組み、横にスクロールして読む。
+ * 下の余白は、節を選んだときに出る操作バーに本文が隠れないよう、広めに空けておく。
+ */
+.vertical {
+  /* 縦書きの箱は、放っておくと中身の分だけ横に伸びる。画面の幅に止めて、中でスクロールさせる */
+  width: 100%;
+  max-width: none;
+  height: calc(100dvh - var(--header-height) - 1px - var(--tabbar-height));
+  padding: var(--space-5) var(--space-5) 5rem;
+  overflow: auto hidden;
+  overscroll-behavior-x: contain;
+  writing-mode: vertical-rl;
+}
+
+.vertical .ribbon {
+  right: var(--space-1);
+}
+
+.vertical .heading {
+  padding-block: 0 var(--space-5);
+  text-align: start;
+}
+
+.vertical .chapterTitle {
+  justify-content: flex-start;
+}
+
+.vertical .chapterTitle::before {
+  display: none;
+}
+
+/* 章の数字は横に寝かせず、1文字ぶんの幅に横並びで収める（縦中横） */
+.vertical .chapterNumber {
+  text-combine-upright: all;
+}
+
+.vertical .status {
+  writing-mode: horizontal-tb;
+}
+
+.vertical .credit {
+  text-align: start;
 }

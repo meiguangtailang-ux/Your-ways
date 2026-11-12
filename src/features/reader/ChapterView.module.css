@@ -9,6 +9,19 @@
   overflow-wrap: anywhere;
 }
 
+/* 文字の大きさ（設定の「小・中・大・特大」。中は上の既定値） */
+.sizeSmall {
+  font-size: var(--text-md);
+}
+
+.sizeLarge {
+  font-size: 1.3125rem;
+}
+
+.sizeXlarge {
+  font-size: 1.5rem;
+}
+
 /* ふりがなの分だけ行間を広げ、行の高さがそろうようにする */
 .withRuby {
   line-height: 2.1;
@@ -33,7 +46,7 @@
 }
 
 .line {
-  padding-left: 3em;
+  padding-inline-start: 3em;
   text-indent: -1em;
 }
 
@@ -44,18 +57,18 @@
  */
 .line .number {
   display: inline-block;
-  top: -0.1em;
-  width: 3.2em;
+  inset-block-end: 0.1em;
+  inline-size: 3.2em;
   margin-inline: -3.2em 0;
-  padding-right: 0.8em;
-  text-align: right;
+  padding-inline-end: 0.8em;
+  text-align: end;
   text-indent: 0;
 }
 
 .title {
   margin-block: 1.2em 0.6em;
   /* 詩の本文の行頭（2字下げ）にそろえる */
-  padding-left: calc(2em / 0.875);
+  padding-inline-start: calc(2em / 0.875);
   color: var(--ink-soft);
   font-size: 0.875em;
   line-height: 1.9;
@@ -66,9 +79,10 @@
   cursor: pointer;
 }
 
+/* 節番号は、行の上側（縦書きでは右側）へ半字ぶん寄せて、小さく添える */
 .number {
   position: relative;
-  top: -0.5em;
+  inset-block-end: 0.5em;
   margin-inline: 0.15em 0.3em;
   color: var(--gold-ink);
   font-family: var(--font-ui);
@@ -92,12 +106,7 @@
 
 /* 線：文字の下半分に、金色のマーカー */
 .highlighted .text {
-  background-image: linear-gradient(
-    transparent 50%,
-    var(--marker) 50%,
-    var(--marker) 94%,
-    transparent 94%
-  );
+  background-image: var(--marker-line);
 }
 
 /* しおりやメモから開いたとき、その節をしばらく光らせて知らせる */
@@ -116,7 +125,28 @@
   display: inline-block;
   width: 0.8em;
   height: 0.8em;
-  margin-left: 0.25em;
+  margin-inline-start: 0.25em;
   color: var(--gold);
   vertical-align: -0.05em;
+}
+
+/*
+ * 縦書き。余白や字下げは向きに依らない書き方（inline / block）にしてあるので、
+ * ここでは縦書きのときだけ変わるものを足す。
+ */
+
+/* 節番号は横に寝かせず、1文字ぶんの幅に数字を横並びで収める（縦中横） */
+.vertical .upright {
+  text-combine-upright: all;
+}
+
+/* 線は、文字の左半分（横書きの「下半分」にあたる側）に引く */
+.vertical .highlighted .text {
+  background-image: linear-gradient(
+    to left,
+    transparent 50%,
+    var(--marker) 50%,
+    var(--marker) 94%,
+    transparent 94%
+  );
 }
