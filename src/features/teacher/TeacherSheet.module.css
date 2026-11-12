@@ -179,3 +179,10 @@
   font-size: 0.6875rem;
   line-height: 1.5;
 }
+
+.unavailable {
+  padding: var(--space-4);
+  border-left: 2px solid var(--gold);
+  background: var(--paper-sunk);
+  font-size: var(--text-sm);
+}

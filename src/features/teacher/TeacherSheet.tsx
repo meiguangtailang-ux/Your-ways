@@ -4,7 +4,7 @@ import { formatRef, translation, type PassageRef } from '@shared/bible';
 import { TEACHER_LIMITS, type TeacherErrorCode } from '@shared/teacher/contract';
 import { Button } from '@/components/Button';
 import { Sheet } from '@/components/Sheet';
-import { TEACHER_NAME } from '@/config/app';
+import { TEACHER_AVAILABLE, TEACHER_NAME } from '@/config/app';
 import { addEntry } from '@/features/journal/journalStore';
 import { PassageQuote } from '@/features/journal/PassageQuote';
 import { cx } from '@/lib/cx';
@@ -83,7 +83,14 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
       <div className={styles.conversation}>
         <PassageQuote reference={formatRef(translation, passage)} quote={quote} />
 
-        {chat.turns.length === 0 && !busy && (
+        {!TEACHER_AVAILABLE && (
+          <p className={styles.unavailable} role="status">
+            この公開版では、{TEACHER_NAME}はまだ使えません。先生と話すには、API
+            サーバーといっしょに動かす必要があります。
+          </p>
+        )}
+
+        {TEACHER_AVAILABLE && chat.turns.length === 0 && !busy && (
           <ul className={styles.starters} aria-label="質問の例">
             {STARTERS.map((question) => (
               <li key={question}>
@@ -146,6 +153,7 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
           placeholder="先生に質問する"
           rows={1}
           maxLength={TEACHER_LIMITS.maxMessageLength}
+          disabled={!TEACHER_AVAILABLE}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />

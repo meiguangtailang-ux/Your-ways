@@ -36,6 +36,13 @@
 
 SNS・公開・課金・ランキング・音声会話・アバター演出は入れていません。
 
+## 公開版（GitHub Pages）
+
+https://meiguangtailang-ux.github.io/Your-ways/
+
+ブランチに push すると、[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) が検査・テスト・ビルドをして自動で公開します。
+公開版は画面だけなので、パウロ先生は使えません（先生の画面で、そのことを伝えます）。ほかの機能はすべて使えます。
+
 ## 動かし方
 
 Node.js 22 以上が必要です。
