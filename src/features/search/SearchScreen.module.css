@@ -1,0 +1,109 @@
+.screen {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--space-5) calc(var(--tabbar-height) + var(--space-6));
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper-raised);
+  color: var(--ink-soft);
+}
+
+.field:focus-within {
+  border-color: var(--gold);
+  outline: 1px solid var(--gold);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-serif);
+}
+
+.input::placeholder {
+  color: var(--ink-faint);
+}
+
+/* ブラウザが付ける消去ボタンは、色が3色から外れるので出さない */
+.input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.hint {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.count {
+  margin-top: var(--space-5);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hit {
+  display: block;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+}
+
+.hit:active {
+  background: var(--paper-sunk);
+}
+
+.reference {
+  display: block;
+  color: var(--gold-ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.text {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--font-serif);
+  line-height: 1.9;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+/*
+ * 見つけた語：線と同じ金のマーカーで示す。
+ * 太字にはしない（どの文字でも太字の Web フォントが要ることになり、オフラインで欠けるため）。
+ */
+.text mark {
+  background: var(--marker-line);
+  color: inherit;
+}
+
+.more {
+  width: 100%;
+  margin-top: var(--space-5);
+}

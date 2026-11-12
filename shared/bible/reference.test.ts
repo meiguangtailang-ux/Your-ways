@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { formatRef, formatVerseList, getAdjacentChapter, isValidLocation } from './reference';
+import {
+  compareLocations,
+  formatRef,
+  formatVerseList,
+  getAdjacentChapter,
+  groupConsecutive,
+  isChapterLocation,
+  isPassageRef,
+  isValidLocation,
+} from './reference';
 import { kougo } from './translations/kougo';
 
 describe('formatVerseList', () => {
@@ -70,5 +79,42 @@ describe('isValidLocation', () => {
     expect(isValidLocation(kougo, { book: 'jhn', chapter: 22 })).toBe(false);
     expect(isValidLocation(kougo, { book: 'jhn', chapter: 0 })).toBe(false);
     expect(isValidLocation(kougo, { book: 'jhn', chapter: Number.NaN })).toBe(false);
+  });
+});
+
+describe('groupConsecutive', () => {
+  it('連続する節をひとまとまりにする', () => {
+    expect(groupConsecutive([19, 16, 17, 16])).toEqual([[16, 17], [19]]);
+    expect(groupConsecutive([])).toEqual([]);
+  });
+});
+
+describe('compareLocations', () => {
+  it('聖書の順（書の並び → 章）で比べる', () => {
+    const locations = [
+      { book: 'jhn', chapter: 3 },
+      { book: 'gen', chapter: 2 },
+      { book: 'gen', chapter: 1 },
+    ] as const;
+    expect([...locations].sort(compareLocations)).toEqual([
+      { book: 'gen', chapter: 1 },
+      { book: 'gen', chapter: 2 },
+      { book: 'jhn', chapter: 3 },
+    ]);
+  });
+});
+
+describe('外から来たデータの確かめ', () => {
+  it('実在する章だけを通す', () => {
+    expect(isChapterLocation(kougo, { book: 'jhn', chapter: 3 })).toBe(true);
+    expect(isChapterLocation(kougo, { book: 'jhn', chapter: 99 })).toBe(false);
+    expect(isChapterLocation(kougo, { book: 'xyz', chapter: 1 })).toBe(false);
+    expect(isChapterLocation(kougo, null)).toBe(false);
+  });
+
+  it('節の並びが数でなければ通さない', () => {
+    expect(isPassageRef(kougo, { book: 'jhn', chapter: 3, verses: [16, 17] })).toBe(true);
+    expect(isPassageRef(kougo, { book: 'jhn', chapter: 3, verses: ['16'] })).toBe(false);
+    expect(isPassageRef(kougo, { book: 'jhn', chapter: 3 })).toBe(false);
   });
 });

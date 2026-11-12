@@ -2,11 +2,14 @@ export { BOOK_IDS, CANON, isBookId, type BookId } from './canon';
 export {
   chapterKey,
   chapterUnit,
+  compareLocations,
   findBook,
-  formatChapterTitle,
   formatRef,
   formatVerseList,
   getAdjacentChapter,
+  groupConsecutive,
+  isChapterLocation,
+  isPassageRef,
   isValidLocation,
   type ChapterLocation,
 } from './reference';
@@ -27,6 +30,7 @@ export type {
   BookInfo,
   ChapterData,
   PassageRef,
+  SearchIndex,
   Segment,
   Testament,
   Translation,

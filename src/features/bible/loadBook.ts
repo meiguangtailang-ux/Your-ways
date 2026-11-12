@@ -16,9 +16,13 @@ export function loadBook(bookId: BookId): Promise<BookData> {
   return pending;
 }
 
+/** 本文データ（書ごとの JSON）の置き場所 */
+export function bookUrl(bookId: BookId): string {
+  return `${import.meta.env.BASE_URL}bible/${translation.id}/${bookId}.json`;
+}
+
 async function fetchBook(bookId: BookId): Promise<BookData> {
-  const url = `${import.meta.env.BASE_URL}bible/${translation.id}/${bookId}.json`;
-  const response = await fetch(url);
+  const response = await fetch(bookUrl(bookId));
   if (!response.ok) throw new Error(`本文を読み込めませんでした（${response.status}）`);
   return (await response.json()) as BookData;
 }

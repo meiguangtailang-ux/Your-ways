@@ -4,7 +4,8 @@
  *   npm run build:bible -- <jpn-kougo.osis.xml のパス>
  *
  * 入力：https://github.com/seven1m/open-bibles の jpn-kougo.osis.xml（パブリックドメイン）
- * 出力：public/bible/kougo/<書ID>.json
+ * 出力：public/bible/kougo/<書ID>.json … 書ごとの本文（段落・詩の行・ふりがな付き）
+ *       public/bible/kougo/search.json … 検索用（全巻の本文を、ふりがなを外した文で）
  *
  * 段落（<p>）・詩の行（<lg>/<l>）・詩篇の表題・ふりがな（<w gloss>）を保ったまま、
  * shared/bible/types.ts の BookData に変換する。
@@ -18,7 +19,7 @@ import { SaxesParser } from 'saxes';
 import { CANON, type BookId } from '../shared/bible/canon';
 import { stripRuby } from '../shared/bible/text';
 import { kougo } from '../shared/bible/translations/kougo';
-import type { Block, BlockKind, BookData, ChapterData } from '../shared/bible/types';
+import type { Block, BlockKind, BookData, ChapterData, SearchIndex } from '../shared/bible/types';
 
 const TRANSLATION = kougo;
 const OUT_DIR = path.resolve(
@@ -256,6 +257,23 @@ function validate(books: BookData[]): void {
   }
 }
 
+/** 検索用に、節ごとの本文（ふりがな無し）を正典の順に並べる */
+function buildSearchIndex(books: BookData[]): SearchIndex {
+  const byId = new Map(books.map((book) => [book.id, book]));
+  return TRANSLATION.books.map(({ id }) => ({
+    book: id,
+    chapters: byId.get(id)!.chapters.map((chapter) => {
+      const verses = new Map<number, string>();
+      for (const block of chapter.blocks) {
+        for (const seg of block.segs) {
+          if (seg.v > 0) verses.set(seg.v, (verses.get(seg.v) ?? '') + stripRuby(seg.text));
+        }
+      }
+      return [...verses];
+    }),
+  }));
+}
+
 function summarize(books: BookData[]): string {
   let verses = 0;
   let segments = 0;
@@ -290,11 +308,14 @@ async function main(): Promise<void> {
 
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
+  const files: Record<string, unknown> = { search: buildSearchIndex(converter.books) };
+  for (const book of converter.books) files[book.id] = book;
+
   let bytes = 0;
-  for (const book of converter.books) {
-    const json = JSON.stringify(book);
+  for (const [name, data] of Object.entries(files)) {
+    const json = JSON.stringify(data);
     bytes += Buffer.byteLength(json);
-    await writeFile(path.join(OUT_DIR, `${book.id}.json`), json);
+    await writeFile(path.join(OUT_DIR, `${name}.json`), json);
   }
 
   console.log(`${TRANSLATION.name}: ${summarize(converter.books)}`);

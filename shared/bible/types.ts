@@ -61,3 +61,12 @@ export interface PassageRef {
   /** 昇順・重複なし */
   verses: number[];
 }
+
+/**
+ * 検索用のデータ（search.json）。全巻の本文を、ふりがなを外した文で持つ。
+ * 正典の順に、書ごと・章ごとに [節番号, 本文] を並べる。
+ */
+export type SearchIndex = {
+  book: BookId;
+  chapters: [verse: number, text: string][][];
+}[];
