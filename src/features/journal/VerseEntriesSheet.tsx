@@ -1,6 +1,6 @@
 import { Sheet, SheetBody } from '@/components/Sheet';
 import { EntryCard } from './EntryCard';
-import type { JournalEntry } from './journalStore';
+import type { JournalEntry } from './journalModel';
 
 interface VerseEntriesSheetProps {
   /** 箇所（例：ヨハネ 3:16） */

@@ -4,10 +4,11 @@ import { formatRef, translation } from '@shared/bible';
 import { EmptyState } from '@/components/EmptyState';
 import { IconButton } from '@/components/IconButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { useReaderPrefs } from '@/features/reader/readerPrefs';
+import { useLastRead } from '@/features/reader/lastRead';
 import { formatDate } from '@/lib/date';
 import { readerPath } from '@/lib/routes';
-import { removeBookmark, useBookmarks, type Bookmark } from './bookmarkStore';
+import type { Bookmark } from './bookmarkModel';
+import { removeBookmark, useBookmarks } from './bookmarkStore';
 import styles from './BookmarksScreen.module.css';
 
 function bookmarkTitle(bookmark: Bookmark): string {
@@ -21,7 +22,7 @@ function bookmarkTitle(bookmark: Bookmark): string {
 /** 「しおり」画面：続きから読む・しおりをはさんだ箇所へ戻る */
 export function BookmarksScreen() {
   const bookmarks = useBookmarks();
-  const { lastRead } = useReaderPrefs();
+  const lastRead = useLastRead();
 
   return (
     <main className={styles.screen}>

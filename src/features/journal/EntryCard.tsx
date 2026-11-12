@@ -1,8 +1,9 @@
 import { Link } from 'react-router';
 import { formatRef, translation } from '@shared/bible';
+import { TEACHER_NAME } from '@/config/app';
 import { formatDate } from '@/lib/date';
 import { readerPath } from '@/lib/routes';
-import { ENTRY_KIND_LABEL, type JournalEntry } from './journalStore';
+import { ENTRY_KIND_LABEL, type JournalEntry } from './journalModel';
 import styles from './EntryCard.module.css';
 
 interface EntryCardProps {
@@ -20,6 +21,7 @@ export function EntryCard({ entry, linkToPassage, onEdit }: EntryCardProps) {
     <article className={styles.card}>
       <header className={styles.meta}>
         <span className={styles.kind}>{ENTRY_KIND_LABEL[entry.kind]}</span>
+        {entry.source === 'teacher' && <span>{TEACHER_NAME}の答え</span>}
         <time dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
         <button type="button" className={styles.edit} onClick={() => onEdit(entry)}>
           直す

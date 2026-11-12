@@ -73,6 +73,29 @@
   font-size: var(--text-sm);
 }
 
+.save,
+.saved {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2rem;
+  margin-top: var(--space-2);
+  color: var(--gold-ink);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.save {
+  padding: 0 var(--space-3);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+}
+
+.save:active {
+  background: var(--paper-sunk);
+}
+
 .waiting {
   color: var(--ink-soft);
   font-size: var(--text-sm);

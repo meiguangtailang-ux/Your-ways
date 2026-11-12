@@ -1,10 +1,11 @@
-import { ArrowUp, Square } from 'lucide-react';
+import { ArrowUp, Check, NotebookPen, Square } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { formatRef, translation, type PassageRef } from '@shared/bible';
 import { TEACHER_LIMITS, type TeacherErrorCode } from '@shared/teacher/contract';
 import { Button } from '@/components/Button';
 import { Sheet } from '@/components/Sheet';
 import { TEACHER_NAME } from '@/config/app';
+import { addEntry } from '@/features/journal/journalStore';
 import { PassageQuote } from '@/features/journal/PassageQuote';
 import { cx } from '@/lib/cx';
 import { useTeacherChat, type ChatTurn } from './useTeacherChat';
@@ -43,6 +44,8 @@ interface TeacherSheetProps {
 export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
   const chat = useTeacherChat(passage);
   const [draft, setDraft] = useState('');
+  /** メモに保存した答え */
+  const [savedIds, setSavedIds] = useState<ReadonlySet<string>>(new Set());
   const endRef = useRef<HTMLDivElement>(null);
   const busy = chat.status !== 'idle';
 
@@ -50,6 +53,18 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
   useEffect(() => {
     if (chat.turns.length > 0 || chat.error) endRef.current?.scrollIntoView({ block: 'end' });
   }, [chat.turns, chat.status, chat.error]);
+
+  /** 先生の答えを、その前の質問と一緒に、この箇所のメモとして残す */
+  const saveAsNote = (answer: ChatTurn, question: ChatTurn | undefined) => {
+    addEntry({
+      kind: 'note',
+      ref: passage,
+      quote,
+      source: 'teacher',
+      body: question ? `Q. ${question.content}\n\n${answer.content}` : answer.content,
+    });
+    setSavedIds((current) => new Set(current).add(answer.id));
+  };
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -84,9 +99,29 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
           </ul>
         )}
 
-        {chat.turns.map((turn) => (
-          <Turn key={turn.id} turn={turn} />
-        ))}
+        {chat.turns.map((turn, index) => {
+          if (turn.role === 'user') {
+            return (
+              <p key={turn.id} className={cx(styles.turn, styles.question)}>
+                {turn.content}
+              </p>
+            );
+          }
+          // 答えが届いている途中は、まだ保存できない
+          const streaming = busy && index === chat.turns.length - 1;
+          return (
+            <Answer
+              key={turn.id}
+              turn={turn}
+              saved={savedIds.has(turn.id)}
+              onSave={
+                turn.content && !streaming
+                  ? () => saveAsNote(turn, chat.turns.slice(0, index).findLast(isQuestion))
+                  : undefined
+              }
+            />
+          );
+        })}
 
         {chat.status === 'waiting' && (
           <p className={styles.waiting} role="status">
@@ -142,14 +177,35 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
   );
 }
 
-function Turn({ turn }: { turn: ChatTurn }) {
-  if (turn.role === 'user')
-    return <p className={cx(styles.turn, styles.question)}>{turn.content}</p>;
+function isQuestion(turn: ChatTurn): boolean {
+  return turn.role === 'user';
+}
+
+interface AnswerProps {
+  turn: ChatTurn;
+  saved: boolean;
+  /** メモに保存する。保存できないとき（答えの途中・答えが無い）は渡さない */
+  onSave?: () => void;
+}
+
+function Answer({ turn, saved, onSave }: AnswerProps) {
   return (
     <div className={cx(styles.turn, styles.answer)}>
       <p className={styles.speaker}>{TEACHER_NAME}</p>
       {turn.content && <p className={styles.answerText}>{turn.content}</p>}
       {turn.outcome && <p className={styles.note}>{OUTCOME_NOTE[turn.outcome]}</p>}
+      {onSave &&
+        (saved ? (
+          <p className={styles.saved} role="status">
+            <Check size={14} aria-hidden />
+            メモに保存しました
+          </p>
+        ) : (
+          <button type="button" className={styles.save} onClick={onSave}>
+            <NotebookPen size={14} aria-hidden />
+            メモに保存
+          </button>
+        ))}
     </div>
   );
 }

@@ -2,14 +2,8 @@ import { useState } from 'react';
 import { formatRef, translation, type PassageRef } from '@shared/bible';
 import { Button } from '@/components/Button';
 import { Sheet, SheetBody, SheetFooter } from '@/components/Sheet';
-import {
-  addEntry,
-  deleteEntry,
-  ENTRY_KIND_LABEL,
-  updateEntry,
-  type EntryKind,
-  type JournalEntry,
-} from './journalStore';
+import { ENTRY_KIND_LABEL, type EntryKind, type JournalEntry } from './journalModel';
+import { addEntry, deleteEntry, updateEntry } from './journalStore';
 import { PassageQuote } from './PassageQuote';
 import styles from './EntryEditor.module.css';
 
@@ -69,7 +63,7 @@ export function EntryEditor({ target, onDone, onClose }: EntryEditorProps) {
           aria-label={ENTRY_KIND_LABEL[kind]}
           placeholder={PLACEHOLDER[kind]}
           value={body}
-          autoFocus
+          data-autofocus
           rows={7}
           onChange={(event) => setBody(event.target.value)}
         />

@@ -1,54 +1,16 @@
 /**
- * しおり。章にはさむもの（verse なし）と、特定の節にはさむもの（verse あり）がある。
+ * しおりの保存と、画面からの読み書き。
  */
-import type { ChapterLocation } from '@shared/bible';
 import { nowIso } from '@/lib/date';
+import { mergeById, newestFirst } from '@/lib/mergeById';
 import { createPersistentStore, useStore } from '@/lib/persistentStore';
-
-export interface Bookmark extends ChapterLocation {
-  id: string;
-  verse?: number;
-  /** はさんだ箇所の書き出し（一覧で見分けるため） */
-  preview: string;
-  createdAt: string;
-}
+import { findBookmark, type Bookmark } from './bookmarkModel';
 
 const store = createPersistentStore<Bookmark[]>('bookmarks.v1', []);
 
 /** すべてのしおり（新しい順） */
 export function useBookmarks(): Bookmark[] {
   return useStore(store);
-}
-
-export function findBookmark(
-  bookmarks: readonly Bookmark[],
-  location: ChapterLocation,
-  verse?: number,
-): Bookmark | undefined {
-  return bookmarks.find(
-    (bookmark) =>
-      bookmark.book === location.book &&
-      bookmark.chapter === location.chapter &&
-      bookmark.verse === verse,
-  );
-}
-
-/** その章で、しおりがはさまれている節 */
-export function versesWithBookmarks(
-  bookmarks: readonly Bookmark[],
-  location: ChapterLocation,
-): Set<number> {
-  const verses = new Set<number>();
-  for (const bookmark of bookmarks) {
-    if (
-      bookmark.book === location.book &&
-      bookmark.chapter === location.chapter &&
-      bookmark.verse !== undefined
-    ) {
-      verses.add(bookmark.verse);
-    }
-  }
-  return verses;
 }
 
 export function addBookmark(draft: Omit<Bookmark, 'id' | 'createdAt'>): void {
@@ -60,4 +22,18 @@ export function addBookmark(draft: Omit<Bookmark, 'id' | 'createdAt'>): void {
 
 export function removeBookmark(id: string): void {
   store.update((bookmarks) => bookmarks.filter((bookmark) => bookmark.id !== id));
+}
+
+/** バックアップ用：すべてのしおり */
+export function exportBookmarks(): Bookmark[] {
+  return store.get();
+}
+
+/** バックアップからしおりを足す。同じ箇所のしおりが既にあれば足さない。戻り値は足された件数 */
+export function importBookmarks(incoming: readonly Bookmark[]): number {
+  const current = store.get();
+  const fresh = incoming.filter((bookmark) => !findBookmark(current, bookmark, bookmark.verse));
+  const { merged, added } = mergeById(current, fresh);
+  if (added > 0) store.update(() => newestFirst(merged));
+  return added;
 }

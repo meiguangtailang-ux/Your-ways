@@ -4,25 +4,32 @@ import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
+import { HighlightList } from '@/features/highlights/HighlightList';
 import { EntryCard } from './EntryCard';
 import { EntryEditor, type EditorTarget } from './EntryEditor';
-import { useJournal, type EntryKind } from './journalStore';
+import type { EntryKind } from './journalModel';
+import { useJournal } from './journalStore';
 import styles from './JournalScreen.module.css';
 
-type Filter = 'all' | EntryKind;
+/** entries = メモと祈りの両方 / highlights = 線を引いた箇所 */
+type Filter = 'entries' | EntryKind | 'highlights';
 
 const FILTERS = [
-  { value: 'all', label: 'すべて' },
+  { value: 'entries', label: 'メモと祈り' },
   { value: 'note', label: 'メモ' },
   { value: 'prayer', label: '祈り' },
+  { value: 'highlights', label: '線' },
 ] as const satisfies readonly { value: Filter; label: string }[];
 
-/** 「ノート」画面：書きためたメモと祈りを読み返す。節に結びつかない祈りもここから書ける */
+/**
+ * 「ノート」画面：書きためたメモと祈り、線を引いた箇所を読み返す。
+ * 節に結びつかない祈りも、ここから書ける。
+ */
 export function JournalScreen() {
   const entries = useJournal();
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>('entries');
   const [editing, setEditing] = useState<EditorTarget>();
-  const shown = filter === 'all' ? entries : entries.filter((entry) => entry.kind === filter);
+  const shown = filter === 'entries' ? entries : entries.filter((entry) => entry.kind === filter);
 
   return (
     <main className={styles.screen}>
@@ -37,7 +44,9 @@ export function JournalScreen() {
       />
       <Segmented label="表示する種類" options={FILTERS} value={filter} onChange={setFilter} />
 
-      {shown.length === 0 ? (
+      {filter === 'highlights' ? (
+        <HighlightList />
+      ) : shown.length === 0 ? (
         <EmptyState title="まだ何も書かれていません">
           聖書を読んで気になる節を押すと、
           <br />

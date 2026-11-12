@@ -2,8 +2,10 @@
 import type { ChapterLocation } from '@shared/bible';
 
 export const ROUTES = {
+  search: '/search',
   journal: '/journal',
   bookmarks: '/bookmarks',
+  settings: '/settings',
 } as const;
 
 /** 読む画面。verse を渡すと、その節までスクロールして知らせる */

@@ -1,12 +1,15 @@
 /**
- * 金色のマーカー（線）。章ごとに、線を引いた節番号を持つ。
+ * 線（金色のマーカー）の保存と、画面からの読み書き。
  */
 import { useMemo } from 'react';
-import { chapterKey, type ChapterLocation } from '@shared/bible';
+import { chapterKey, type ChapterLocation, type PassageRef } from '@shared/bible';
 import { createPersistentStore, useStore } from '@/lib/persistentStore';
-
-/** 章キー（例："jhn.3"）→ 線を引いた節番号 */
-type HighlightState = Record<string, number[]>;
+import {
+  applyHighlight,
+  listHighlightedPassages,
+  mergeHighlights,
+  type HighlightState,
+} from './highlightModel';
 
 const store = createPersistentStore<HighlightState>('highlights.v1', {});
 
@@ -16,6 +19,12 @@ const NONE: readonly number[] = [];
 export function useChapterHighlights(location: ChapterLocation): ReadonlySet<number> {
   const verses = useStore(store)[chapterKey(location)] ?? NONE;
   return useMemo(() => new Set(verses), [verses]);
+}
+
+/** 線を引いた箇所の一覧（聖書の順） */
+export function useHighlightedPassages(): PassageRef[] {
+  const state = useStore(store);
+  return useMemo(() => listHighlightedPassages(state), [state]);
 }
 
 /** 指定した節に線を引く（on = true）／外す（on = false） */
@@ -33,16 +42,14 @@ export function setHighlight(
   });
 }
 
-/** 線の付け外しをした後の節番号（昇順） */
-export function applyHighlight(
-  current: readonly number[],
-  verses: readonly number[],
-  on: boolean,
-): number[] {
-  const next = new Set(current);
-  for (const verse of verses) {
-    if (on) next.add(verse);
-    else next.delete(verse);
-  }
-  return [...next].sort((a, b) => a - b);
+/** バックアップ用：すべての線 */
+export function exportHighlights(): HighlightState {
+  return store.get();
+}
+
+/** バックアップから線を足す。戻り値は、新しく線が付いた節の数 */
+export function importHighlights(incoming: HighlightState): number {
+  const { merged, added } = mergeHighlights(store.get(), incoming);
+  if (added > 0) store.update(() => merged);
+  return added;
 }
