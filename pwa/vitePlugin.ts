@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
-import { APP_DESCRIPTION, APP_NAME, PAPER_COLOR, STORAGE_PREFIX } from '../shared/appInfo';
+import { APP_DESCRIPTION, APP_NAME, PAPER_COLOR, STORAGE_PREFIX } from '../shared/appInfo.ts';
 
 /** index.html の中で %名前% と書くと置きかわる値 */
 const HTML_VALUES: Record<string, string> = {

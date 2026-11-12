@@ -1,6 +1,7 @@
 import {
   Bookmark,
   ChevronRight,
+  Clapperboard,
   HandHeart,
   Highlighter,
   MessageCircleQuestion,
@@ -10,6 +11,8 @@ import {
 } from 'lucide-react';
 import { IconButton } from '@/components/IconButton';
 import type { EntryKind } from '@/features/journal/journalModel';
+import { Chibi } from '@/features/people/Chibi';
+import type { Person } from '@/features/people/people';
 import { TEACHER_NAME } from '@/config/app';
 import styles from './SelectionBar.module.css';
 
@@ -22,6 +25,10 @@ interface SelectionBarProps {
   bookmarked: boolean;
   /** 選択中の節に付いているメモ・祈りの数 */
   entryCount: number;
+  /** 選択中の節に出てくる人物 */
+  people: readonly Person[];
+  onShowPerson: (person: Person) => void;
+  onMakeVideo: () => void;
   onToggleHighlight: () => void;
   onWrite: (kind: EntryKind) => void;
   onAskTeacher: () => void;
@@ -36,6 +43,9 @@ export function SelectionBar({
   allHighlighted,
   bookmarked,
   entryCount,
+  people,
+  onShowPerson,
+  onMakeVideo,
   onToggleHighlight,
   onWrite,
   onAskTeacher,
@@ -57,6 +67,24 @@ export function SelectionBar({
           <IconButton label="選択をやめる" onClick={onClear}>
             <X size={20} aria-hidden />
           </IconButton>
+        </div>
+        <div className={styles.extras}>
+          {people.map((person) => (
+            <button
+              key={person.id}
+              type="button"
+              className={styles.person}
+              aria-label={`${person.name}はどんな人か`}
+              onClick={() => onShowPerson(person)}
+            >
+              <Chibi look={person.look} size={30} />
+              {person.name}
+            </button>
+          ))}
+          <button type="button" className={styles.video} onClick={onMakeVideo}>
+            <Clapperboard size={14} aria-hidden />
+            動画にする
+          </button>
         </div>
         <div className={styles.actions}>
           <Action

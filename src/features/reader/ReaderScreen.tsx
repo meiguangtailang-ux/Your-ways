@@ -29,9 +29,12 @@ import {
 } from '@/features/journal/journalModel';
 import { useJournal } from '@/features/journal/journalStore';
 import { VerseEntriesSheet } from '@/features/journal/VerseEntriesSheet';
+import { findPeople, type Person } from '@/features/people/people';
+import { PersonSheet } from '@/features/people/PersonSheet';
 import { useDisplayPrefs } from '@/features/settings/displayPrefs';
 import { DisplaySheet } from '@/features/settings/DisplaySheet';
 import { TeacherSheet } from '@/features/teacher/TeacherSheet';
+import { VideoSheet } from '@/features/video/VideoSheet';
 import { cx } from '@/lib/cx';
 import { readerPath } from '@/lib/routes';
 import { ChapterNav } from './ChapterNav';
@@ -68,7 +71,9 @@ type OpenSheet =
   | { type: 'display' }
   | { type: 'editor'; target: EditorTarget }
   | { type: 'entries' }
-  | { type: 'teacher' };
+  | { type: 'teacher' }
+  | { type: 'person'; person: Person }
+  | { type: 'video' };
 
 interface ReaderProps {
   location: ChapterLocation;
@@ -102,6 +107,14 @@ function Reader({ location, focusVerse }: ReaderProps) {
   const selectionEntries = useMemo(
     () => entriesForVerses(journal, location, selection),
     [journal, location, selection],
+  );
+  const selectionQuote = useMemo(
+    () => (chapter ? quotePassage(chapter, selection) : ''),
+    [chapter, selection],
+  );
+  const people = useMemo(
+    () => findPeople(location.book, selectionQuote),
+    [location.book, selectionQuote],
   );
   const chapterBookmark = findBookmark(bookmarks, location);
   const firstSelected = selection[0];
@@ -242,6 +255,9 @@ function Reader({ location, focusVerse }: ReaderProps) {
           allHighlighted={allHighlighted}
           bookmarked={verseBookmark !== undefined}
           entryCount={selectionEntries.length}
+          people={people}
+          onShowPerson={(person) => setSheet({ type: 'person', person })}
+          onMakeVideo={() => setSheet({ type: 'video' })}
           onToggleHighlight={toggleHighlight}
           onWrite={(kind) => write(kind, chapter)}
           onAskTeacher={() => setSheet({ type: 'teacher' })}
@@ -262,6 +278,10 @@ function Reader({ location, focusVerse }: ReaderProps) {
         />
       )}
       {sheet?.type === 'display' && <DisplaySheet onClose={closeSheet} />}
+      {sheet?.type === 'person' && <PersonSheet person={sheet.person} onClose={closeSheet} />}
+      {sheet?.type === 'video' && (
+        <VideoSheet passage={passage} quote={selectionQuote} people={people} onClose={closeSheet} />
+      )}
       {sheet?.type === 'editor' && (
         <EntryEditor target={sheet.target} onDone={clearSelection} onClose={closeSheet} />
       )}

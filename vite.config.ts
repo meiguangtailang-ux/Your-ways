@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
-import { appShell } from './pwa/vitePlugin';
+import { appShell } from './pwa/vitePlugin.ts';
 
 const API_ORIGIN = `http://localhost:${process.env.PORT ?? 8787}`;
 

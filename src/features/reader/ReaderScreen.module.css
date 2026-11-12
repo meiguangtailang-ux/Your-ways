@@ -7,7 +7,7 @@
 
 /* 操作バーが出ているあいだは、最後の節が隠れないように下の余白を広げる */
 .selecting:not(.vertical) {
-  padding-bottom: 12rem;
+  padding-bottom: 15rem;
 }
 
 /* しおりをはさんだ章の右上に下がる、金のしおりひも */
@@ -86,7 +86,7 @@
   width: 100%;
   max-width: none;
   height: calc(100dvh - var(--header-height) - 1px - var(--tabbar-height));
-  padding: var(--space-5) var(--space-5) 5rem;
+  padding: var(--space-5) var(--space-5) 8rem;
   overflow: auto hidden;
   overscroll-behavior-x: contain;
   writing-mode: vertical-rl;

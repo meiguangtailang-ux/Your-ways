@@ -1,0 +1,65 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* 縦長の画面の見本。シートに収まる大きさで見せる */
+.screen {
+  width: auto;
+  height: min(46dvh, 26rem);
+  aspect-ratio: 9 / 16;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+}
+
+.text {
+  width: 100%;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.progress {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--paper-sunk);
+  appearance: none;
+}
+
+.progress::-webkit-progress-bar {
+  background: var(--paper-sunk);
+}
+
+.progress::-webkit-progress-value {
+  background: var(--gold);
+}
+
+.progress::-moz-progress-bar {
+  background: var(--gold);
+}
+
+.start,
+.save {
+  margin-left: auto;
+}
+
+/* 「保存する」はファイルへのリンクなので、主なボタンと同じ見た目を付ける */
+.save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-5);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
