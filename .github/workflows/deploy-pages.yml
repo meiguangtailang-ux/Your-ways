@@ -32,9 +32,8 @@ jobs:
       - run: npm run build
         env:
           VITE_TEACHER_AVAILABLE: 'false'
+      # Pages は、リポジトリの Settings → Pages で「GitHub Actions」を選んで有効にしておく
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
