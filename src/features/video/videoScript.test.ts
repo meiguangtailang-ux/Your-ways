@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildScript, sceneAt, totalSeconds, wrapText } from './videoScript';
+import {
+  buildScript,
+  pageTexts,
+  sceneAt,
+  totalSeconds,
+  withIllustrations,
+  wrapText,
+} from './videoScript';
 
 describe('wrapText', () => {
   it('決めた文字数で折り返す', () => {
@@ -31,5 +38,37 @@ describe('buildScript', () => {
     expect(sceneAt(scenes, 2.6)?.scene.kind).toBe('text');
     expect(sceneAt(scenes, totalSeconds(scenes) - 0.1)?.scene.kind).toBe('credit');
     expect(sceneAt(scenes, totalSeconds(scenes) + 1)).toBeUndefined();
+  });
+});
+
+describe('withIllustrations', () => {
+  const field = { setting: 'field', props: ['sheep'], cast: ['shepherd'] } as const;
+  const sea = { setting: 'sea', props: ['boat'], cast: ['fisherman'] } as const;
+  const scenes = buildScript('箇所', 'あ'.repeat(25), '口語訳', {
+    charactersPerLine: 5,
+    linesPerPage: 2,
+  });
+
+  it('本文のページの文を取り出す', () => {
+    expect(pageTexts(scenes)).toEqual([
+      'ああああああああああ',
+      'ああああああああああ',
+      'あああああ',
+    ]);
+  });
+
+  it('題には全体の絵、各ページにはそのページの絵、出典には絵を付けない', () => {
+    const illustrated = withIllustrations(
+      scenes,
+      { ...field, props: [...field.props], cast: [...field.cast] },
+      [{ ...sea, props: [...sea.props], cast: [...sea.cast] }],
+    );
+    expect(illustrated.map((scene) => scene.illustration?.setting)).toEqual([
+      'field',
+      'sea',
+      'field',
+      'field',
+      undefined,
+    ]);
   });
 });

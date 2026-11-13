@@ -1,3 +1,5 @@
+import type { Scene } from '@shared/scene/vocabulary';
+
 /**
  * 動画の台本づくり。選んだ聖書箇所を、画面に収まる行とページに割り、それぞれの表示時間を決める。
  * 絵を描く部分（renderVideo.ts）とは分けてあり、ここは計算だけ。
@@ -17,6 +19,27 @@ export interface VideoScene {
   lines: string[];
   /** この場面を見せる時間（秒） */
   seconds: number;
+  /** この場面の挿絵（題と本文のページに付ける） */
+  illustration?: Scene;
+}
+
+/** 本文のページの文（挿絵の場面を考えるときに使う） */
+export function pageTexts(scenes: readonly VideoScene[]): string[] {
+  return scenes.filter((scene) => scene.kind === 'text').map((scene) => scene.lines.join(''));
+}
+
+/** 題には箇所全体の挿絵を、本文の各ページにはそのページの挿絵を付ける */
+export function withIllustrations(
+  scenes: readonly VideoScene[],
+  overall: Scene,
+  pages: readonly Scene[],
+): VideoScene[] {
+  let page = 0;
+  return scenes.map((scene) => {
+    if (scene.kind === 'title') return { ...scene, illustration: overall };
+    if (scene.kind === 'text') return { ...scene, illustration: pages[page++] ?? overall };
+    return scene;
+  });
 }
 
 /** 1行の文字数で折り返す。行頭に句読点などが来るときは、前の行にぶら下げる */

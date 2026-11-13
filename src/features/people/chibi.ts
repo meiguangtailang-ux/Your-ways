@@ -7,8 +7,10 @@
 export interface ChibiLook {
   hair: 'short' | 'long' | 'curly' | 'bald';
   beard?: 'short' | 'long';
-  /** かぶりもの */
-  head?: 'veil' | 'crown' | 'cloth';
+  /** かぶりもの（halo = 天使の光の輪） */
+  head?: 'veil' | 'crown' | 'cloth' | 'helmet' | 'halo';
+  /** 背中の羽（天使） */
+  wings?: boolean;
   /** 持ちもの（その人を思い出す手がかり） */
   item?:
     | 'staff'
@@ -22,7 +24,11 @@ export interface ChibiLook {
     | 'wheat'
     | 'fish'
     | 'key'
-    | 'star';
+    | 'star'
+    | 'spear'
+    | 'sling'
+    | 'lamp'
+    | 'jar';
   /** 衣の色。gold = 金 / ink = 黒 / paper = クリーム */
   robe: 'gold' | 'ink' | 'paper';
 }
@@ -52,6 +58,10 @@ function headwear(kind: ChibiLook['head'], c: ChibiColors): string {
       return `<path d="M22 70c-6-34 6-58 28-58s34 24 28 58c-1-22-5-36-28-36S23 48 22 70z" fill="${c.gold}"/>`;
     case 'crown':
       return `<path d="M32 22l4-12 7 8 7-10 7 10 7-8 4 12z" fill="${c.gold}" stroke="${c.ink}" stroke-width="1.5" stroke-linejoin="round"/>`;
+    case 'helmet':
+      return `<path d="M23 40c0-17 11-27 27-27s27 10 27 27z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M50 13V4M44 5h12" stroke="${c.ink}" stroke-width="2.5" stroke-linecap="round"/>`;
+    case 'halo':
+      return `<ellipse cx="50" cy="10" rx="17" ry="5" fill="none" stroke="${c.gold}" stroke-width="3"/>`;
     case 'cloth':
       return `<path d="M24 38c0-16 10-25 26-25s26 9 26 25c-8-6-16-9-26-9s-18 3-26 9z" fill="${c.paper}" stroke="${c.ink}" stroke-width="1.5"/><path d="M24 36h52" stroke="${c.gold}" stroke-width="3"/>`;
     default:
@@ -60,18 +70,21 @@ function headwear(kind: ChibiLook['head'], c: ChibiColors): string {
 }
 
 function item(kind: ChibiLook['item'], c: ChibiColors): string {
-  const line = `fill="none" stroke="${c.ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  /** 線の書き方。同じ属性を2回書くと、動画用の絵として読めなくなるので、太さは引数で変える */
+  const stroke = (width = 2) =>
+    `fill="none" stroke="${c.ink}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"`;
+  const line = stroke();
   switch (kind) {
     case 'staff':
       return `<path d="M82 112V62c0-7 9-7 9 0" ${line}/>`;
     case 'harp':
-      return `<path d="M76 104V74c8-2 14 4 14 14v16z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M80 78v24M84 80v22" ${line} stroke-width="1"/>`;
+      return `<path d="M76 104V74c8-2 14 4 14 14v16z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M80 78v24M84 80v22" ${stroke(1)}/>`;
     case 'scroll':
-      return `<rect x="74" y="80" width="18" height="22" rx="3" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/><path d="M78 87h10M78 92h10M78 97h6" ${line} stroke-width="1"/>`;
+      return `<rect x="74" y="80" width="18" height="22" rx="3" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/><path d="M78 87h10M78 92h10M78 97h6" ${stroke(1)}/>`;
     case 'net':
-      return `<path d="M74 84c4 14 14 14 18 0z" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/><path d="M78 85l3 9M83 85v10M88 85l-3 9" ${line} stroke-width="1"/>`;
+      return `<path d="M74 84c4 14 14 14 18 0z" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/><path d="M78 85l3 9M83 85v10M88 85l-3 9" ${stroke(1)}/>`;
     case 'tablets':
-      return `<path d="M73 102V84a5 5 0 0110 0 5 5 0 0110 0v18z" fill="${c.paper}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M83 84v18" ${line} stroke-width="1"/>`;
+      return `<path d="M73 102V84a5 5 0 0110 0 5 5 0 0110 0v18z" fill="${c.paper}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M83 84v18" ${stroke(1)}/>`;
     case 'boat':
       return `<path d="M72 96h22c-2 7-6 9-11 9s-9-2-11-9z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M83 96V82l8 10" ${line}/>`;
     case 'lamb':
@@ -84,6 +97,14 @@ function item(kind: ChibiLook['item'], c: ChibiColors): string {
       return `<path d="M72 94c6-8 14-8 18 0-4 8-12 8-18 0zM90 94l6-5v10z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>`;
     case 'key':
       return `<circle cx="83" cy="84" r="5" fill="none" stroke="${c.ink}" stroke-width="2"/><path d="M83 89v15M83 99h5M83 104h4" ${line}/>`;
+    case 'spear':
+      return `<path d="M84 112V58" ${line}/><path d="M84 46l5 13h-10z" fill="${c.gold}" stroke="${c.ink}" stroke-width="1.5" stroke-linejoin="round"/>`;
+    case 'sling':
+      return `<path d="M72 80c4 10 10 14 16 14M88 94c2-6 2-12-2-16" ${line}/><circle cx="90" cy="98" r="4" fill="${c.ink}"/>`;
+    case 'lamp':
+      return `<path d="M72 98c4 6 16 6 20 0l-4-4H76z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/><path d="M92 95c3-3 3-7 0-11-2 4-3 7 0 11z" fill="${c.gold}" stroke="${c.ink}" stroke-width="1.2"/>`;
+    case 'jar':
+      return `<path d="M76 82h14l-2 4c5 3 6 12 2 18H76c-4-6-3-15 2-18z" fill="${c.gold}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>`;
     case 'star':
       return `<path d="M83 78l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="${c.gold}" stroke="${c.ink}" stroke-width="1.5" stroke-linejoin="round"/>`;
     default:
@@ -97,6 +118,9 @@ export function chibiSvg(look: ChibiLook, c: ChibiColors): string {
   const trim = look.robe === 'gold' ? c.ink : c.gold;
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">',
+    look.wings
+      ? `<path d="M30 80c-18-6-26-22-22-34 10 4 20 14 24 28zM70 80c18-6 26-22 22-34-10 4-20 14-24 28z" fill="${c.paper}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>`
+      : '',
     // からだ（衣）と手足
     `<path d="M30 112c0-26 6-42 20-42s20 16 20 42z" fill="${robe}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>`,
     `<path d="M50 72v40" stroke="${trim}" stroke-width="2"/>`,

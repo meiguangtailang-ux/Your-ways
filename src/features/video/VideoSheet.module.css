@@ -63,3 +63,31 @@
   letter-spacing: 0.04em;
   text-decoration: none;
 }
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.option input {
+  flex: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 2px;
+  accent-color: var(--gold);
+}
+
+.hint {
+  display: block;
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}

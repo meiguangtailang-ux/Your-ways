@@ -3,6 +3,8 @@
  * Anthropic の SDK は大きいので、このファイルは先生を使うときにだけ読み込む（teacherApi.ts）。
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { planScenes, type SceneRequest } from '@shared/scene/planScenes';
+import type { Scene } from '@shared/scene/vocabulary';
 import { TEACHER_MODEL, type TeacherEvent, type TeacherRequest } from '@shared/teacher/contract';
 import { streamTeacher, toErrorCode } from '@shared/teacher/stream';
 import { loadBook } from '@/features/bible/loadBook';
@@ -47,4 +49,13 @@ export async function checkKey(apiKey: string): Promise<KeyCheck> {
   } catch (error) {
     return toErrorCode(error, 'reader') === 'invalid_key' ? 'invalid' : 'unreachable';
   }
+}
+
+/** 動画の挿絵の場面を、読者のキーで AI に考えてもらう */
+export function planScenesWithOwnKey(
+  apiKey: string,
+  request: SceneRequest,
+  signal: AbortSignal,
+): Promise<Scene[] | undefined> {
+  return planScenes(createClient(apiKey), TEACHER_MODEL, request, signal);
 }
