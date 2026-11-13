@@ -70,26 +70,48 @@ export const FIGURES = {
   crowd: '群衆（大ぜいの人）',
 } as const;
 
+/** 人物の動き。動画の中で、本文に合わせて動かす */
+export const ACTIONS = {
+  stand: '立っている・聞いている',
+  walk: '歩いてくる・行く',
+  run: '走ってくる・逃げる',
+  speak: '話す・言う・呼ぶ・歌う',
+  pray: '祈る',
+  raise: '両手を上げる・喜ぶ・ほめたたえる',
+  point: '指さす・示す',
+  give: '差し出す・与える・ささげる',
+  kneel: 'ひざまずく・ひれ伏す・拝む',
+  sleep: '眠る・横たわる',
+} as const;
+
 export type SettingId = keyof typeof SETTINGS;
+export type ActionId = keyof typeof ACTIONS;
 export type PropId = keyof typeof PROPS;
 export type FigureId = keyof typeof FIGURES;
 
 export const SETTING_IDS = Object.keys(SETTINGS) as SettingId[];
 export const PROP_IDS = Object.keys(PROPS) as PropId[];
 export const FIGURE_IDS = Object.keys(FIGURES) as FigureId[];
+export const ACTION_IDS = Object.keys(ACTIONS) as ActionId[];
 
 /** 一場面に置く数の上限 */
 export const MAX_PROPS = 3;
 export const MAX_CAST = 3;
 
 /**
- * 一場面の挿絵。
- * cast には、名前のある人物の id（例：david）か、FIGURES の id（例：soldier）を入れる。
+ * 場面に出てくる人物ひとり。
+ * who には、名前のある人物の id（例：david）か、FIGURES の id（例：soldier）を入れる。
  */
+export interface CastMember {
+  who: string;
+  action: ActionId;
+}
+
+/** 一場面の挿絵 */
 export interface Scene {
   setting: SettingId;
   props: PropId[];
-  cast: string[];
+  cast: CastMember[];
 }
 
 /** 名前のある人物（AI に、選べる人物として伝える） */
@@ -104,6 +126,10 @@ export function isSettingId(value: unknown): value is SettingId {
 
 export function isPropId(value: unknown): value is PropId {
   return typeof value === 'string' && value in PROPS;
+}
+
+export function isActionId(value: unknown): value is ActionId {
+  return typeof value === 'string' && value in ACTIONS;
 }
 
 export function isFigureId(value: unknown): value is FigureId {

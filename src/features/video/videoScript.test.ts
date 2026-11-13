@@ -42,8 +42,16 @@ describe('buildScript', () => {
 });
 
 describe('withIllustrations', () => {
-  const field = { setting: 'field', props: ['sheep'], cast: ['shepherd'] } as const;
-  const sea = { setting: 'sea', props: ['boat'], cast: ['fisherman'] } as const;
+  const field = {
+    setting: 'field',
+    props: ['sheep'],
+    cast: [{ who: 'shepherd', action: 'walk' }],
+  } as const;
+  const sea = {
+    setting: 'sea',
+    props: ['boat'],
+    cast: [{ who: 'fisherman', action: 'stand' }],
+  } as const;
   const scenes = buildScript('箇所', 'あ'.repeat(25), '口語訳', {
     charactersPerLine: 5,
     linesPerPage: 2,

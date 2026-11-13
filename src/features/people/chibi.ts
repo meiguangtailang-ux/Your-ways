@@ -112,10 +112,81 @@ function item(kind: ChibiLook['item'], c: ChibiColors): string {
   }
 }
 
+/**
+ * 手の形。
+ * side = 体の横 / pray = 胸の前で合わせる / raise = 両手を上げる / point = 指さす / give = 前に差し出す
+ */
+export type ChibiHands = 'side' | 'pray' | 'raise' | 'point' | 'give';
+
+/** 動きに合わせて変える部分（動画で使う） */
+export interface ChibiPose {
+  hands?: ChibiHands;
+  eyes?: 'open' | 'closed';
+  /** 話している途中の、開いた口 */
+  mouthOpen?: boolean;
+}
+
+function hand(x: number, y: number, c: ChibiColors): string {
+  return `<circle cx="${x}" cy="${y}" r="5" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/>`;
+}
+
+/** 袖（肩から手まで）。黒い線の上に衣の色を重ねて、ふちどりのある袖にする */
+function sleeve(
+  from: [number, number],
+  to: [number, number],
+  robe: string,
+  c: ChibiColors,
+): string {
+  const d = `M${from[0]} ${from[1]}L${to[0]} ${to[1]}`;
+  return `<path d="${d}" stroke="${c.ink}" stroke-width="10" stroke-linecap="round"/><path d="${d}" stroke="${robe}" stroke-width="6" stroke-linecap="round"/>`;
+}
+
+function hands(kind: ChibiHands, robe: string, c: ChibiColors): string {
+  switch (kind) {
+    case 'pray':
+      return `<path d="M44 92c2-10 4-14 6-16 2 2 4 6 6 16z" fill="${c.paper}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>`;
+    case 'raise':
+      return (
+        sleeve([37, 80], [21, 62], robe, c) +
+        sleeve([63, 80], [79, 62], robe, c) +
+        hand(20, 60, c) +
+        hand(80, 60, c)
+      );
+    case 'point':
+      return hand(29, 94, c) + sleeve([64, 82], [86, 74], robe, c) + hand(88, 73, c);
+    case 'give':
+      return (
+        hand(43, 95, c) +
+        hand(57, 95, c) +
+        `<ellipse cx="50" cy="88" rx="9" ry="6" fill="${c.gold}" stroke="${c.ink}" stroke-width="2"/>`
+      );
+    case 'side':
+      return hand(29, 94, c) + hand(71, 94, c);
+  }
+}
+
+function face(look: ChibiLook, pose: ChibiPose, c: ChibiColors): string {
+  const eyes =
+    pose.eyes === 'closed'
+      ? `<path d="M36 45q4 4 8 0M56 45q4 4 8 0" fill="none" stroke="${c.ink}" stroke-width="2.2" stroke-linecap="round"/>`
+      : `<circle cx="40" cy="45" r="2.6" fill="${c.ink}"/><circle cx="60" cy="45" r="2.6" fill="${c.ink}"/>`;
+  const cheeks = `<circle cx="34" cy="52" r="3.5" fill="${c.gold}" opacity="0.55"/><circle cx="66" cy="52" r="3.5" fill="${c.gold}" opacity="0.55"/>`;
+  // ひげのある人は、口がひげに隠れる。話すときだけ、ひげの上に口を開ける
+  const mouth = pose.mouthOpen
+    ? `<ellipse cx="50" cy="56" rx="4" ry="3.5" fill="${look.beard ? c.paper : c.ink}" stroke="${c.ink}" stroke-width="1.5"/>`
+    : look.beard
+      ? ''
+      : `<path d="M45 54c3 3 7 3 10 0" fill="none" stroke="${c.ink}" stroke-width="2" stroke-linecap="round"/>`;
+  return eyes + cheeks + mouth;
+}
+
 /** 100×120 の枠に描いた人物の SVG */
-export function chibiSvg(look: ChibiLook, c: ChibiColors): string {
+export function chibiSvg(look: ChibiLook, c: ChibiColors, pose: ChibiPose = {}): string {
   const robe = c[look.robe];
   const trim = look.robe === 'gold' ? c.ink : c.gold;
+  const handKind = pose.hands ?? 'side';
+  // 手がふさがる形のときは、持ちものを持たない
+  const holdsItem = handKind === 'side' || handKind === 'point';
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120">',
     look.wings
@@ -124,8 +195,6 @@ export function chibiSvg(look: ChibiLook, c: ChibiColors): string {
     // からだ（衣）と手足
     `<path d="M30 112c0-26 6-42 20-42s20 16 20 42z" fill="${robe}" stroke="${c.ink}" stroke-width="2" stroke-linejoin="round"/>`,
     `<path d="M50 72v40" stroke="${trim}" stroke-width="2"/>`,
-    `<circle cx="29" cy="94" r="5" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/>`,
-    `<circle cx="71" cy="94" r="5" fill="${c.paper}" stroke="${c.ink}" stroke-width="2"/>`,
     `<ellipse cx="42" cy="114" rx="7" ry="4" fill="${c.ink}"/><ellipse cx="58" cy="114" rx="7" ry="4" fill="${c.ink}"/>`,
     // 大きな頭
     look.head === 'veil' ? headwear('veil', c) : '',
@@ -136,12 +205,10 @@ export function chibiSvg(look: ChibiLook, c: ChibiColors): string {
       ? `<path d="M26 40c2-14 10-22 24-22s22 8 24 22c-6-6-14-9-24-9s-18 3-24 9z" fill="${c.gold}"/>`
       : headwear(look.head, c),
     // 顔：目・ほお・口
-    `<circle cx="40" cy="45" r="2.6" fill="${c.ink}"/><circle cx="60" cy="45" r="2.6" fill="${c.ink}"/>`,
-    `<circle cx="34" cy="52" r="3.5" fill="${c.gold}" opacity="0.55"/><circle cx="66" cy="52" r="3.5" fill="${c.gold}" opacity="0.55"/>`,
-    look.beard
-      ? ''
-      : `<path d="M45 54c3 3 7 3 10 0" fill="none" stroke="${c.ink}" stroke-width="2" stroke-linecap="round"/>`,
-    item(look.item, c),
+    face(look, pose, c),
+    // 手は顔より手前に描く（両手を上げたとき、頭に隠れないように）
+    hands(handKind, robe, c),
+    holdsItem ? item(look.item, c) : '',
     '</svg>',
   ].join('');
 }

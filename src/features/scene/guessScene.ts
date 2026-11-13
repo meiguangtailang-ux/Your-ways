@@ -1,11 +1,13 @@
 /**
- * 本文の言葉から、挿絵の場面（背景・小物・人物）を推し量る。
+ * 本文の言葉から、挿絵の場面（背景・小物・人物とその動き）を推し量る。
  * AI を使わない（API キーが無い）ときの方法で、AI の答えが得られなかったときの代わりにもなる。
  */
 import type { BookId } from '@shared/bible';
 import {
   MAX_CAST,
   MAX_PROPS,
+  type ActionId,
+  type CastMember,
   type FigureId,
   type PropId,
   type Scene,
@@ -77,10 +79,25 @@ const FIGURE_RULES: [FigureId, RegExp][] = [
   ['woman', /女|妻|母|娘|姉妹/],
   ['elder', /老人|年老/],
   ['crowd', /群衆|人々|民|大ぜい/],
-  ['man', /弟子|男/],
+  ['man', /弟子|男|博士|父/],
 ];
 
-/** 小物ごとに、本文に出てくる位置（出てこなければ undefined） */
+const FIGURE_PATTERN = Object.fromEntries(FIGURE_RULES) as Record<FigureId, RegExp>;
+
+/** 動きの手がかり（動詞）。本文に出てくる順に、主語の人物へ渡す */
+const ACTION_RULES: [ActionId, RegExp][] = [
+  ['speak', /言った|言われた|言う|答え|叫|告げ|語っ|話し|呼ばわ|歌/],
+  ['pray', /祈/],
+  ['kneel', /ひざまず|ひれ伏|拝/],
+  ['raise', /ほめたたえ|あがめ|さんび|賛美|喜び|喜ん|手をあげ|感謝し|おどり/],
+  ['run', /走|逃げ|急いで/],
+  ['walk', /歩|行った|行き|来た|来て|出かけ|上って|下って|旅|従っ|近寄|集まっ|向かって/],
+  ['point', /指さ|見よ|見なさい|示し/],
+  ['give', /与え|さし出|渡し|分け|ささげ/],
+  ['sleep', /眠|熟睡|寝て|寝た|横たわ|横にな/],
+];
+
+/** 本文に出てくる位置（出てこなければ undefined） */
 function firstIndex(text: string, pattern: RegExp): number | undefined {
   const index = text.search(pattern);
   return index >= 0 ? index : undefined;
@@ -104,28 +121,126 @@ function pickSetting(text: string): SettingId | undefined {
   return best?.id;
 }
 
+// ---------------------------------------------------------------- 人物と動き
+
+/** 場面に出す人物の候補と、本文の中でその人を指す書き方 */
+interface Candidate {
+  who: string;
+  pattern: RegExp;
+}
+
+/** 主語のしるし（「ダビデは」「ダビデ王は」「人々が」「弟子たちも」） */
+const SUBJECT_MARK = '(?:王|王妃|たち|ら)?(?:は|が|も)';
+
+/** 文の主語として出てくる位置。主語でなければ undefined */
+function subjectAt(
+  text: string,
+  { pattern }: Candidate,
+  all: readonly Candidate[],
+): number | undefined {
+  const direct = text.search(new RegExp(`(?:${pattern.source})${SUBJECT_MARK}`, 'u'));
+  if (direct >= 0) return direct;
+  // 「ペテロと人々は」のように、「と」でつながった主語
+  for (const match of text.matchAll(new RegExp(`(?:${pattern.source})(?:たち|ら)?と`, 'gu'))) {
+    const rest = text.slice(match.index + match[0].length);
+    const joined = all.some((other) =>
+      new RegExp(`^(?:${other.pattern.source})${SUBJECT_MARK}`, 'u').test(rest),
+    );
+    if (joined) return match.index;
+  }
+  return undefined;
+}
+
+/** 主語が本文に書かれていない文で、動く人として加える、名前のない人 */
+const UNNAMED_DOER = 'man';
+
+/** 本文に出てくる動き（動詞）と、その位置。出てくる順に並べる */
+function findActions(text: string): { action: ActionId; at: number }[] {
+  return ACTION_RULES.flatMap(([action, pattern]) =>
+    [...text.matchAll(new RegExp(pattern.source, 'gu'))].map((match) => ({
+      action,
+      at: match.index,
+    })),
+  ).sort((a, b) => a.at - b.at);
+}
+
+/**
+ * 人物に動きを割り当てる。
+ * 動くのは、文の主語になっている人物。それぞれの主語は、その後ろに出てくる最初の動きをする。
+ * 主語でない人物（話しかけられる人、会いに来られる人）は立っている。
+ * 主語より前に出てくる動きは、本文に書かれていない主語（前の節から続く人）のものなので、
+ * 名前のない人をひとり、その動きをする人として加える。
+ */
+function assignActions(text: string, candidates: readonly Candidate[]): CastMember[] {
+  const actions = findActions(text);
+  const subjects = candidates
+    .map((candidate) => ({ who: candidate.who, at: subjectAt(text, candidate, candidates) }))
+    .filter((subject): subject is { who: string; at: number } => subject.at !== undefined)
+    .sort((a, b) => a.at - b.at);
+
+  const cast = candidates.map(({ who }): CastMember => {
+    const subject = subjects.find((entry) => entry.who === who);
+    const action = subject && actions.find((entry) => entry.at > subject.at)?.action;
+    return { who, action: action ?? 'stand' };
+  });
+
+  const firstSubjectAt = subjects[0]?.at ?? Infinity;
+  const unspoken = actions.find((entry) => entry.at < firstSubjectAt);
+  if (!unspoken) return cast;
+  return [{ who: UNNAMED_DOER, action: unspoken.action }, ...cast].slice(0, MAX_CAST);
+}
+
+/**
+ * 名前のない人物の言葉が、名前のある人物のすぐ前後にある（「ダビデ王」「母マリヤ」）ときは、
+ * 同じ人を指しているので、別の人物としては加えない。
+ */
+function besideNamedPerson(text: string, word: RegExp, people: readonly Person[]): boolean {
+  const match = word.exec(text);
+  if (!match) return false;
+  const before = text.slice(0, match.index);
+  const after = text.slice(match.index + match[0].length);
+  return people.some((person) => {
+    const name = person.match ?? person.name;
+    return (
+      new RegExp(`(?:${name})$`, 'u').test(before) || new RegExp(`^(?:${name})`, 'u').test(after)
+    );
+  });
+}
+
+// ---------------------------------------------------------------- 場面
+
 /** 本文から読み取れた分だけの場面（何も読み取れない項目は空・undefined） */
 export interface SceneHints {
   setting?: SettingId;
   props: PropId[];
-  cast: string[];
+  cast: CastMember[];
 }
 
 export function guessScene(book: BookId, text: string): SceneHints {
   const people: Person[] = findPeople(book, text).slice(0, MAX_CAST);
-  const hasCrown = people.some((person) => person.look.head === 'crown');
-  const figures = pickInOrder(text, FIGURE_RULES, MAX_CAST)
-    // 冠をかぶった人物（ダビデ王など）がいるときは、別に「王」を足さない
-    .filter((figure) => !(figure === 'king' && hasCrown));
+  const figures = pickInOrder(text, FIGURE_RULES, MAX_CAST).filter(
+    (figure) => !besideNamedPerson(text, FIGURE_PATTERN[figure], people),
+  );
+  const candidates: Candidate[] = [
+    ...people.map((person) => ({
+      who: person.id,
+      pattern: new RegExp(person.match ?? person.name, 'u'),
+    })),
+    ...figures.map((figure) => ({ who: figure, pattern: FIGURE_PATTERN[figure] })),
+  ].slice(0, MAX_CAST);
   return {
     setting: pickSetting(text),
     props: pickInOrder(text, PROP_RULES, MAX_PROPS),
-    cast: [...people.map((person) => person.id), ...figures].slice(0, MAX_CAST),
+    cast: assignActions(text, candidates),
   };
 }
 
 /** 何も読み取れないときの場面 */
-const DEFAULT_SCENE: Scene = { setting: 'plain', props: [], cast: ['man'] };
+const DEFAULT_SCENE: Scene = {
+  setting: 'plain',
+  props: [],
+  cast: [{ who: 'man', action: 'stand' }],
+};
 
 /** 足りない項目を、もとの場面から補う */
 export function fillScene(hints: SceneHints, base: Scene = DEFAULT_SCENE): Scene {

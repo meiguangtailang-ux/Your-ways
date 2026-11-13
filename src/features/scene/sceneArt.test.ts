@@ -1,6 +1,6 @@
 import { SaxesParser } from 'saxes';
 import { describe, expect, it } from 'vitest';
-import { FIGURE_IDS, PROP_IDS, SETTING_IDS } from '@shared/scene/vocabulary';
+import { ACTION_IDS, FIGURE_IDS, PROP_IDS, SETTING_IDS } from '@shared/scene/vocabulary';
 import { chibiSvg } from '@/features/people/chibi';
 import { PEOPLE } from '@/features/people/people';
 import { castPlacements, castSvg, sceneBackgroundSvg } from './sceneArt';
@@ -40,7 +40,11 @@ describe('挿絵の SVG', () => {
 
   it('すべての人物が、正しい XML になっている', () => {
     for (const id of [...FIGURE_IDS, ...PEOPLE.map((person) => person.id)]) {
-      for (const placement of castPlacements({ setting: 'plain', props: [], cast: [id] })) {
+      for (const placement of castPlacements({
+        setting: 'plain',
+        props: [],
+        cast: [{ who: id, action: 'stand' }],
+      })) {
         expect(() => parseStrictly(castSvg(placement, colors)), id).not.toThrow();
       }
     }
@@ -50,15 +54,47 @@ describe('挿絵の SVG', () => {
   });
 });
 
+describe('人物の動き', () => {
+  it('動きごとの絵が、すべて正しい XML になっている', () => {
+    for (const action of ACTION_IDS) {
+      for (const who of ['man', 'david']) {
+        const [placement] = castPlacements({
+          setting: 'plain',
+          props: [],
+          cast: [{ who, action }],
+        });
+        expect(() => parseStrictly(castSvg(placement!, colors)), `${who} ${action}`).not.toThrow();
+        expect(
+          () => parseStrictly(castSvg(placement!, colors, { mouthOpen: true })),
+          `${who} ${action} 口`,
+        ).not.toThrow();
+      }
+    }
+  });
+
+  it('群衆の3人は、みんな同じ動きをする', () => {
+    const placements = castPlacements({
+      setting: 'plain',
+      props: [],
+      cast: [{ who: 'crowd', action: 'raise' }],
+    });
+    expect(placements.map((placement) => placement.action)).toEqual(['raise', 'raise', 'raise']);
+  });
+});
+
 describe('castPlacements', () => {
   it('人物の数に応じて、左右に並べる', () => {
-    const xs = castPlacements({ setting: 'plain', props: [], cast: ['man', 'woman', 'king'] }).map(
-      (placement) => placement.x,
-    );
+    const xs = castPlacements({
+      setting: 'plain',
+      props: [],
+      cast: ['man', 'woman', 'king'].map((who) => ({ who, action: 'stand' as const })),
+    }).map((placement) => placement.x);
     expect(xs).toEqual([150, 300, 450]);
   });
 
   it('群衆は、ひと枠に3人を描く', () => {
-    expect(castPlacements({ setting: 'plain', props: [], cast: ['crowd'] })).toHaveLength(3);
+    expect(
+      castPlacements({ setting: 'plain', props: [], cast: [{ who: 'crowd', action: 'raise' }] }),
+    ).toHaveLength(3);
   });
 });

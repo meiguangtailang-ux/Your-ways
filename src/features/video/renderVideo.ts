@@ -3,8 +3,8 @@
  * 外のサービスは使わず、端末の中だけで作る。色はクリーム・金・黒の3色。
  *
  * 1ページの組み方（縦長 720×1280）
- *   上：挿絵（その場面の背景・小物・人物。人物は小さく揺れる）
- *   下：本文
+ *   上：挿絵（その場面の背景・小物・人物。人物は本文に合わせて動く：castMotion.ts）
+ *   下：本文（1行ずつ現れる）
  */
 import type { Scene } from '@shared/scene/vocabulary';
 import { PAPER_COLOR } from '@/config/app';
@@ -15,6 +15,7 @@ import {
   sceneBackgroundSvg,
   type CastPlacement,
 } from '@/features/scene/sceneArt';
+import { castMotion, lineReveal } from './castMotion';
 import { sceneAt, totalSeconds, type VideoScene } from './videoScript';
 
 /** 縦長（スマホで見やすい 9:16） */
@@ -47,10 +48,10 @@ function loadSvg(svg: string): Promise<HTMLImageElement> {
   });
 }
 
-/** 描く用意のできた挿絵：背景（小物をふくむ）と、動かす人物 */
+/** 描く用意のできた挿絵：背景（小物をふくむ）と、動かす人物（話す人は口を開けた絵も） */
 interface PreparedArt {
   background: HTMLImageElement;
-  cast: { image: HTMLImageElement; placement: CastPlacement }[];
+  cast: { image: HTMLImageElement; mouthOpen?: HTMLImageElement; placement: CastPlacement }[];
 }
 
 export type ArtBook = Map<string, PreparedArt>;
@@ -63,14 +64,20 @@ export async function prepareArt(scenes: readonly VideoScene[]): Promise<ArtBook
   for (const { illustration } of scenes) {
     if (!illustration || book.has(sceneKey(illustration))) continue;
     const placements = castPlacements(illustration);
-    const [background, ...cast] = await Promise.all([
+    const [background, cast] = await Promise.all([
       loadSvg(sceneBackgroundSvg(illustration, COLORS)),
-      ...placements.map((placement) => loadSvg(castSvg(placement, COLORS))),
+      Promise.all(
+        placements.map(async (placement) => ({
+          placement,
+          image: await loadSvg(castSvg(placement, COLORS)),
+          mouthOpen:
+            placement.action === 'speak'
+              ? await loadSvg(castSvg(placement, COLORS, { mouthOpen: true }))
+              : undefined,
+        })),
+      ),
     ]);
-    book.set(sceneKey(illustration), {
-      background: background!,
-      cast: cast.map((image, index) => ({ image, placement: placements[index]! })),
-    });
+    book.set(sceneKey(illustration), { background, cast });
   }
   return book;
 }
@@ -80,34 +87,117 @@ function fade(elapsed: number, seconds: number): number {
   return Math.max(0, Math.min(1, elapsed / FADE_SECONDS, (seconds - elapsed) / FADE_SECONDS));
 }
 
-function drawLines(context: CanvasRenderingContext2D, lines: string[], centerY: number): void {
-  const top = centerY - ((lines.length - 1) * LINE_HEIGHT) / 2;
-  lines.forEach((line, index) => {
-    context.fillText(line, VIDEO_SIZE.width / 2, top + index * LINE_HEIGHT);
-  });
-}
-
 function roundedPanel(context: CanvasRenderingContext2D): void {
   context.beginPath();
   context.roundRect(PANEL.x, PANEL.y, PANEL.width, PANEL.height, PANEL.radius);
 }
 
-/** 挿絵を描く。人物は、ひとりずつ少しずらした間合いで、上下にゆっくり揺れる */
-function drawIllustration(context: CanvasRenderingContext2D, art: PreparedArt, t: number): void {
+/** 頭の近くの飾り：話す吹き出し・祈りの光・眠りの「z」 */
+function drawEffect(
+  context: CanvasRenderingContext2D,
+  effect: 'bubble' | 'sparkle' | 'zzz',
+  x: number,
+  y: number,
+  t: number,
+): void {
+  context.save();
+  if (effect === 'bubble') {
+    // 吹き出しは、少しふくらんだり縮んだりする
+    const scale = 1 + Math.sin(t * 5) * 0.06;
+    context.translate(x, y);
+    context.scale(scale, scale);
+    context.beginPath();
+    context.roundRect(-30, -22, 60, 38, 16);
+    context.moveTo(-14, 14);
+    context.lineTo(-22, 28);
+    context.lineTo(-2, 15);
+    context.fillStyle = COLORS.paper;
+    context.fill();
+    context.strokeStyle = COLORS.ink;
+    context.lineWidth = 2.5;
+    context.stroke();
+    context.fillStyle = COLORS.ink;
+    [-12, 0, 12].forEach((dotX, dot) => {
+      const lift = Math.max(0, Math.sin(t * 8 - dot * 0.9)) * 4;
+      context.beginPath();
+      context.arc(dotX, -3 - lift, 3.5, 0, Math.PI * 2);
+      context.fill();
+    });
+  } else if (effect === 'sparkle') {
+    // 小さな金の光が、またたく
+    [
+      [-8, 0, 0],
+      [22, 16, 1.7],
+    ].forEach(([sx, sy, delay]) => {
+      const glow = (Math.sin(t * 3 + delay!) + 1) / 2;
+      const r = 4 + glow * 6;
+      context.globalAlpha *= 0.4 + glow * 0.6;
+      context.beginPath();
+      context.moveTo(x + sx!, y + sy! - r);
+      context.quadraticCurveTo(x + sx!, y + sy!, x + sx! + r, y + sy!);
+      context.quadraticCurveTo(x + sx!, y + sy!, x + sx!, y + sy! + r);
+      context.quadraticCurveTo(x + sx!, y + sy!, x + sx! - r, y + sy!);
+      context.quadraticCurveTo(x + sx!, y + sy!, x + sx!, y + sy! - r);
+      context.fillStyle = COLORS.gold;
+      context.fill();
+    });
+  } else {
+    // 「z」が、ゆっくり上へのぼって消える
+    context.fillStyle = COLORS.gold;
+    context.textAlign = 'center';
+    for (let k = 0; k < 3; k += 1) {
+      const rise = (t * 0.6 + k / 3) % 1;
+      context.globalAlpha = (1 - rise) * 0.9;
+      context.font = serifFont(700, 18 + k * 6);
+      context.fillText('z', x + rise * 26 + k * 8, y - rise * 40);
+    }
+  }
+  context.restore();
+}
+
+/** 挿絵を描く。人物は、本文に合わせた動きをする（castMotion.ts） */
+function drawIllustration(
+  context: CanvasRenderingContext2D,
+  art: PreparedArt,
+  t: number,
+  elapsed: number,
+): void {
   context.save();
   roundedPanel(context);
   context.clip();
   context.drawImage(art.background, PANEL.x, PANEL.y, PANEL.width, PANEL.height);
-  art.cast.forEach(({ image, placement }, index) => {
-    const bob = Math.abs(Math.sin(t * 2.2 + index * 1.3)) * 7;
-    const height = placement.width * 1.2;
+  art.cast.forEach(({ image, mouthOpen, placement }, index) => {
+    const side = placement.x > SCENE_SIZE.width / 2 ? 1 : -1;
+    const motion = castMotion(placement.action, t, elapsed, index, side);
+    const width = placement.width;
+    const height = width * 1.2;
+    // 足もとを中心に、動かしてから描く
+    const footX = PANEL.x + placement.x + motion.dx;
+    const footY = PANEL.y + placement.baseline + motion.dy;
+    context.save();
+    if (placement.action === 'sleep') {
+      // 横になった人は、体の厚みの分だけ持ち上げて、地面の上に寝かせる
+      context.translate(footX + height / 2, footY - width * 0.32);
+    } else {
+      context.translate(footX, footY);
+    }
+    context.rotate(motion.rotate);
+    context.scale(1, motion.scaleY);
     context.drawImage(
-      image,
-      PANEL.x + placement.x - placement.width / 2,
-      PANEL.y + placement.baseline - height - bob,
-      placement.width,
+      motion.mouthOpen && mouthOpen ? mouthOpen : image,
+      -width / 2,
+      -height,
+      width,
       height,
     );
+    context.restore();
+
+    if (motion.effect) {
+      const headTop =
+        placement.action === 'sleep' ? footY - width * 0.8 : footY - height * motion.scaleY;
+      const effectX = placement.action === 'sleep' ? footX + width * 0.2 : footX + width * 0.42;
+      drawEffect(context, motion.effect, effectX, headTop + 6, t + index);
+    }
   });
   context.restore();
   roundedPanel(context);
@@ -141,12 +231,20 @@ export function drawFrame(
   context.textBaseline = 'middle';
 
   const prepared = scene.illustration && art.get(sceneKey(scene.illustration));
-  if (prepared) drawIllustration(context, prepared, t);
+  if (prepared) drawIllustration(context, prepared, t, elapsed);
 
   context.fillStyle = COLORS.ink;
   if (scene.kind === 'text') {
+    // 本文は、人物の動きに合わせて、1行ずつ現れる
     context.font = serifFont(500, FONT_SIZE);
-    drawLines(context, scene.lines, TEXT_CENTER);
+    const pageAlpha = context.globalAlpha;
+    const top = TEXT_CENTER - ((scene.lines.length - 1) * LINE_HEIGHT) / 2;
+    scene.lines.forEach((line, index) => {
+      context.globalAlpha =
+        pageAlpha * lineReveal(index, scene.lines.length, elapsed, scene.seconds);
+      context.fillText(line, width / 2, top + index * LINE_HEIGHT);
+    });
+    context.globalAlpha = pageAlpha;
   } else if (scene.kind === 'title') {
     context.font = serifFont(700, 48);
     context.fillText(scene.lines[0] ?? '', width / 2, 720);

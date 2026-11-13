@@ -5,6 +5,7 @@
 import { SCENES_API_PATH, type SceneRequest, type SceneResponse } from '@shared/scene/planScenes';
 import {
   FIGURE_IDS,
+  isActionId,
   isPropId,
   isSettingId,
   MAX_CAST,
@@ -29,7 +30,11 @@ function sanitize(scenes: unknown, pageCount: number): Scene[] | undefined {
     setting: isSettingId(scene.setting) ? scene.setting : 'plain',
     props: (Array.isArray(scene.props) ? scene.props : []).filter(isPropId).slice(0, MAX_PROPS),
     cast: (Array.isArray(scene.cast) ? scene.cast : [])
-      .filter((id): id is string => typeof id === 'string' && KNOWN_CAST.has(id))
+      .filter((member) => typeof member?.who === 'string' && KNOWN_CAST.has(member.who))
+      .map((member) => ({
+        who: member.who,
+        action: isActionId(member.action) ? member.action : 'stand',
+      }))
       .slice(0, MAX_CAST),
   }));
 }

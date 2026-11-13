@@ -3,8 +3,13 @@
  * 背景と小物は1枚の絵にまとめ、人物は動かせるように別々の絵にする（renderVideo.ts で重ねる）。
  * 色はクリーム・金・黒の3色だけ。濃淡は透明度で出す。
  */
-import type { PropId, Scene, SettingId } from '@shared/scene/vocabulary';
-import { chibiSvg, type ChibiColors, type ChibiLook } from '@/features/people/chibi';
+import type { ActionId, PropId, Scene, SettingId } from '@shared/scene/vocabulary';
+import {
+  chibiSvg,
+  type ChibiColors,
+  type ChibiLook,
+  type ChibiPose,
+} from '@/features/people/chibi';
 import { PEOPLE } from '@/features/people/people';
 
 export interface SceneColors extends ChibiColors {
@@ -380,7 +385,7 @@ export function sceneBackgroundSvg(scene: Scene, c: SceneColors): string {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">`,
     `<rect width="${width}" height="${height}" fill="${c.paper}"/>`,
     SETTING_ART[scene.setting](c),
-    propsArt(scene, castSlots(scene).length, c),
+    propsArt(scene, scene.cast.length, c),
     '</svg>',
   ].join('');
 }
@@ -411,6 +416,7 @@ function lookOf(id: string): ChibiLook {
 /** 挿絵の中の人物ひとり分の置き方 */
 export interface CastPlacement {
   look: ChibiLook;
+  action: ActionId;
   /** 足もとの中心 */
   x: number;
   baseline: number;
@@ -418,29 +424,42 @@ export interface CastPlacement {
   width: number;
 }
 
-/** 人物を置く「枠」。群衆は1枠に3人を並べる */
-function castSlots(scene: Scene): string[] {
-  return scene.cast;
-}
-
 const SLOT_X: Record<number, number[]> = { 1: [300], 2: [215, 385], 3: [150, 300, 450] };
 
 export function castPlacements(scene: Scene): CastPlacement[] {
-  const slots = castSlots(scene);
-  const xs = SLOT_X[slots.length] ?? [];
-  return slots.flatMap((id, index): CastPlacement[] => {
+  const xs = SLOT_X[scene.cast.length] ?? [];
+  return scene.cast.flatMap(({ who, action }, index): CastPlacement[] => {
     const x = xs[index]!;
-    const width = 150 * (FIGURE_SCALE[id] ?? 1);
-    if (id !== 'crowd') return [{ look: lookOf(id), x, baseline: FLOOR, width }];
+    const width = 150 * (FIGURE_SCALE[who] ?? 1);
+    if (who !== 'crowd') return [{ look: lookOf(who), action, x, baseline: FLOOR, width }];
     // 群衆：小さめの3人。奥のふたりは少し上に置く
     return [
-      { look: FIGURE_LOOKS.woman!, x: x - 42, baseline: FLOOR - 16, width: 92 },
-      { look: FIGURE_LOOKS.man!, x: x + 42, baseline: FLOOR - 16, width: 92 },
-      { look: FIGURE_LOOKS.child!, x, baseline: FLOOR, width: 92 },
+      { look: FIGURE_LOOKS.woman!, action, x: x - 42, baseline: FLOOR - 16, width: 92 },
+      { look: FIGURE_LOOKS.man!, action, x: x + 42, baseline: FLOOR - 16, width: 92 },
+      { look: FIGURE_LOOKS.child!, action, x, baseline: FLOOR, width: 92 },
     ];
   });
 }
 
-export function castSvg(placement: CastPlacement, c: SceneColors): string {
-  return chibiSvg(placement.look, c);
+/** 動きごとの、手の形と目 */
+const ACTION_POSE: Record<ActionId, ChibiPose> = {
+  stand: {},
+  walk: {},
+  run: {},
+  speak: {},
+  pray: { hands: 'pray', eyes: 'closed' },
+  kneel: { hands: 'pray', eyes: 'closed' },
+  raise: { hands: 'raise' },
+  point: { hands: 'point' },
+  give: { hands: 'give' },
+  sleep: { eyes: 'closed' },
+};
+
+/** 人物の絵。mouthOpen は、話している途中の口を開いた絵 */
+export function castSvg(
+  placement: CastPlacement,
+  c: SceneColors,
+  { mouthOpen = false }: { mouthOpen?: boolean } = {},
+): string {
+  return chibiSvg(placement.look, c, { ...ACTION_POSE[placement.action], mouthOpen });
 }
