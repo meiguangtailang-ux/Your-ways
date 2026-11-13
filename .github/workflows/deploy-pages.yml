@@ -1,5 +1,5 @@
 # 画面を GitHub Pages に公開する。
-# 公開版は画面だけで、パウロ先生（API サーバー）は動かないため、先生は「この公開版では使えません」と表示する。
+# 公開版は画面だけで、パウロ先生の API サーバーは無い。先生は、読者が設定で入れた自分の API キーで動く。
 name: GitHub Pages に公開
 
 on:
@@ -31,7 +31,7 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
-          VITE_TEACHER_AVAILABLE: 'false'
+          VITE_TEACHER_SERVER: 'false'
       # Pages は、リポジトリの Settings → Pages で「GitHub Actions」を選んで有効にしておく
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

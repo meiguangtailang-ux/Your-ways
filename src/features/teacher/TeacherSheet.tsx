@@ -1,13 +1,16 @@
 import { ArrowUp, Check, NotebookPen, Square } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
 import { formatRef, translation, type PassageRef } from '@shared/bible';
 import { TEACHER_LIMITS, type TeacherErrorCode } from '@shared/teacher/contract';
 import { Button } from '@/components/Button';
 import { Sheet } from '@/components/Sheet';
-import { TEACHER_AVAILABLE, TEACHER_NAME } from '@/config/app';
+import { TEACHER_NAME, TEACHER_SERVER_AVAILABLE } from '@/config/app';
 import { addEntry } from '@/features/journal/journalStore';
 import { PassageQuote } from '@/features/journal/PassageQuote';
 import { cx } from '@/lib/cx';
+import { ROUTES } from '@/lib/routes';
+import { useTeacherKey } from './teacherKey';
 import { useTeacherChat, type ChatTurn } from './useTeacherChat';
 import styles from './TeacherSheet.module.css';
 
@@ -22,10 +25,15 @@ const STARTERS = [
 const ERROR_MESSAGE: Record<TeacherErrorCode, string> = {
   invalid_request: '質問をうまく送れませんでした。短くして、もう一度ためしてください。',
   not_configured: `${TEACHER_NAME}は、まだ準備中です。（サーバーに API キーが設定されていません）`,
+  needs_key: `${TEACHER_NAME}と話すには、「設定」で自分の API キーを入れてください。`,
+  invalid_key: 'API キーが正しくないか、使えなくなっているようです。「設定」で確かめてください。',
   rate_limited: '質問が続いたので、少し時間をおいてから、もう一度たずねてください。',
   busy: '先生がいま混みあっています。少し待ってから、もう一度ためしてください。',
   unavailable: '先生につながりませんでした。通信の状態をたしかめて、もう一度ためしてください。',
 };
+
+/** 設定でキーを直せば解決する失敗 */
+const KEY_ERRORS: ReadonlySet<TeacherErrorCode> = new Set(['needs_key', 'invalid_key']);
 
 const OUTCOME_NOTE: Record<NonNullable<ChatTurn['outcome']>, string> = {
   truncated: '（話が長くなったので、ここで区切りました。続きが知りたいときは、たずねてください。）',
@@ -48,6 +56,8 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
   const [savedIds, setSavedIds] = useState<ReadonlySet<string>>(new Set());
   const endRef = useRef<HTMLDivElement>(null);
   const busy = chat.status !== 'idle';
+  // 自分の API キーがあるか、API サーバーがあれば話せる
+  const ready = useTeacherKey() !== undefined || TEACHER_SERVER_AVAILABLE;
 
   // 会話が進むたびに、いちばん新しい発言が見えるようにする
   useEffect(() => {
@@ -83,14 +93,18 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
       <div className={styles.conversation}>
         <PassageQuote reference={formatRef(translation, passage)} quote={quote} />
 
-        {!TEACHER_AVAILABLE && (
-          <p className={styles.unavailable} role="status">
-            この公開版では、{TEACHER_NAME}はまだ使えません。先生と話すには、API
-            サーバーといっしょに動かす必要があります。
-          </p>
+        {!ready && (
+          <div className={styles.unavailable} role="status">
+            <p>
+              {TEACHER_NAME}と話すには、「設定」で自分の API キー（Anthropic）を入れてください。
+            </p>
+            <Link className={styles.settingsLink} to={ROUTES.settings} onClick={onClose}>
+              設定を開く
+            </Link>
+          </div>
         )}
 
-        {TEACHER_AVAILABLE && chat.turns.length === 0 && !busy && (
+        {ready && chat.turns.length === 0 && !busy && (
           <ul className={styles.starters} aria-label="質問の例">
             {STARTERS.map((question) => (
               <li key={question}>
@@ -140,7 +154,13 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
         {chat.error && (
           <div className={styles.error} role="alert">
             <p>{ERROR_MESSAGE[chat.error]}</p>
-            <Button onClick={chat.retry}>もう一度ためす</Button>
+            {KEY_ERRORS.has(chat.error) ? (
+              <Link className={styles.settingsLink} to={ROUTES.settings} onClick={onClose}>
+                設定を開く
+              </Link>
+            ) : (
+              <Button onClick={chat.retry}>もう一度ためす</Button>
+            )}
           </div>
         )}
         <div ref={endRef} />
@@ -153,7 +173,7 @@ export function TeacherSheet({ passage, quote, onClose }: TeacherSheetProps) {
           placeholder="先生に質問する"
           rows={1}
           maxLength={TEACHER_LIMITS.maxMessageLength}
-          disabled={!TEACHER_AVAILABLE}
+          disabled={!ready}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />

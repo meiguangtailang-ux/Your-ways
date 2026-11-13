@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ChapterData } from '../../shared/bible/types';
+import type { ChapterData } from '../bible/types';
 import { buildChapterContext, buildSelectionNote } from './prompt';
 
 const chapter: ChapterData = {

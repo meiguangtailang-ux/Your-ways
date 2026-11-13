@@ -17,8 +17,8 @@ import {
 } from '../../shared/teacher/contract';
 import { config } from '../config';
 import { createRateLimiter } from '../lib/rateLimit';
+import { isAbort, streamTeacher, toErrorCode } from '../../shared/teacher/stream';
 import { loadChapter } from './passage';
-import { buildChapterContext, buildSelectionNote, TEACHER_PERSONA } from './prompt';
 
 const requestSchema = z.object({
   passage: z.object({
@@ -53,19 +53,6 @@ function clientKey(c: Context): string {
   return forwarded || getConnInfo(c).remote.address || 'unknown';
 }
 
-/** Claude 側の失敗を、画面に伝える理由に言いかえる */
-function toErrorCode(error: unknown): TeacherErrorCode {
-  if (error instanceof Anthropic.AuthenticationError) return 'not_configured';
-  if (error instanceof Anthropic.PermissionDeniedError) return 'not_configured';
-  if (error instanceof Anthropic.RateLimitError) return 'busy';
-  if (error instanceof Anthropic.InternalServerError) return 'busy';
-  if (error instanceof Anthropic.APIConnectionError) return 'unavailable';
-  if (error instanceof Anthropic.APIError) return 'unavailable';
-  // API に届く前の失敗。キーが設定されていないとここに来る
-  if (error instanceof Anthropic.AnthropicError) return 'not_configured';
-  return 'unavailable';
-}
-
 export const teacherRoute = new Hono().post('/', async (c) => {
   if (!limiter.take(clientKey(c))) return fail(c, 429, 'rate_limited');
 
@@ -76,69 +63,31 @@ export const teacherRoute = new Hono().post('/', async (c) => {
   const chapter = await loadChapter(passage.book, passage.chapter);
   if (!chapter) return fail(c, 400, 'invalid_request');
 
-  // 読者が選んだ節は、最初の発言の前に添える。
-  // 章の本文より後ろに置くことで、同じ章の別の節についての質問でもキャッシュが使える
-  const selectionNote = buildSelectionNote(passage);
-  const conversation: Anthropic.Beta.BetaMessageParam[] = messages.map((message, index) => ({
-    role: message.role,
-    content:
-      index === 0 && selectionNote ? `${selectionNote}\n\n${message.content}` : message.content,
-  }));
-
   c.header('Content-Type', 'application/x-ndjson; charset=utf-8');
   c.header('Cache-Control', 'no-store');
   c.header('X-Accel-Buffering', 'no');
 
   return stream(c, async (output) => {
     const send = (event: TeacherEvent) => output.write(`${JSON.stringify(event)}\n`);
+    // 読者がシートを閉じたら、Claude への問い合わせも止める
+    const controller = new AbortController();
+    output.onAbort(() => controller.abort());
 
     try {
       client ??= new Anthropic();
-      const reply = client.beta.messages.stream({
-        model: config.teacherModel,
-        max_tokens: 16000,
-        output_config: { effort: 'medium' },
-        // 安全上の理由でモデルが答えを断ったとき、代わりのモデルで答え直す
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-        // 会話が進むたびに、前回までの分をキャッシュから読む
-        cache_control: { type: 'ephemeral' },
-        system: [
-          { type: 'text', text: TEACHER_PERSONA },
-          {
-            type: 'text',
-            text: buildChapterContext(passage, chapter),
-            cache_control: { type: 'ephemeral' },
-          },
-        ],
-        messages: conversation,
-      });
-      // 読者がシートを閉じたら、Claude への問い合わせも止める
-      output.onAbort(() => reply.abort());
-
-      for await (const event of reply) {
-        if (event.type === 'content_block_start' && event.content_block.type === 'fallback') {
-          // 代わりのモデルが最初から答え直すので、途中まで届いた文は捨てる
-          await send({ type: 'reset' });
-        } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          await send({ type: 'delta', text: event.delta.text });
-        }
+      const question = { passage, chapter, messages };
+      for await (const event of streamTeacher(
+        client,
+        config.teacherModel,
+        question,
+        controller.signal,
+      )) {
+        await send(event);
       }
-
-      const { stop_reason: stopReason } = await reply.finalMessage();
-      await send({
-        type: 'done',
-        outcome:
-          stopReason === 'refusal'
-            ? 'declined'
-            : stopReason === 'max_tokens'
-              ? 'truncated'
-              : 'complete',
-      });
     } catch (error) {
-      if (error instanceof Anthropic.APIUserAbortError) return;
+      if (isAbort(error)) return;
       console.error('[teacher]', error);
-      await send({ type: 'error', code: toErrorCode(error) });
+      await send({ type: 'error', code: toErrorCode(error, 'server') });
     }
   });
 });

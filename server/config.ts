@@ -3,6 +3,7 @@
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TEACHER_MODEL } from '../shared/teacher/contract';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -10,7 +11,7 @@ export const config = {
   port: Number(process.env.PORT ?? 8787),
 
   /** パウロ先生に使う Claude のモデル */
-  teacherModel: process.env.TEACHER_MODEL ?? 'claude-opus-5-5',
+  teacherModel: process.env.TEACHER_MODEL ?? TEACHER_MODEL,
 
   /** 画面を別のオリジンに置くときに、そのオリジンを許可する（同じサーバーから配信するなら不要） */
   corsOrigin: process.env.CORS_ORIGIN,

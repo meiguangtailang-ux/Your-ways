@@ -181,8 +181,26 @@
 }
 
 .unavailable {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
   padding: var(--space-4);
   border-left: 2px solid var(--gold);
   background: var(--paper-sunk);
   font-size: var(--text-sm);
+}
+
+/* 設定へのリンク。ボタンと同じ形にそろえる */
+.settingsLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-5);
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
 }

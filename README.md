@@ -41,7 +41,7 @@ SNS・公開・課金・ランキング・音声会話・アバター演出は�
 https://meiguangtailang-ux.github.io/Your-ways/
 
 ブランチに push すると、[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) が検査・テスト・ビルドをして自動で公開します。
-公開版は画面だけなので、パウロ先生は使えません（先生の画面で、そのことを伝えます）。ほかの機能はすべて使えます。
+公開版は画面だけです。パウロ先生は、読者が「設定」で自分の Anthropic API キーを入れると使えます（キーはその端末のブラウザにだけ保存され、ブラウザから直接 Anthropic に送られます）。
 
 ## 動かし方
 
@@ -66,10 +66,17 @@ npm run dev            # 画面 http://localhost:5173 ／ API http://localhost:8
 
 ### パウロ先生（AI）の設定
 
+先生と話す方法は2つあります。
+
+- **自分の API キーを入れる**：「設定」→「パウロ先生」に Anthropic の API キーを入れます。ブラウザから直接 Claude と話すので、サーバーはいりません（公開版はこの方法）。キーはその端末にだけ保存され、料金はそのキーにかかります。
+- **API サーバーを使う**：下のとおり、サーバーにキーを設定します。読者はキーを入れずに使えます。
+
+両方あるときは、読者が入れたキーを使います。
+
 - `ANTHROPIC_API_KEY` をサーバーの環境変数（`.env`）に設定します。API キーはブラウザには渡りません。
 - 未設定でも、ほかの機能はすべて使えます（先生だけ「準備中」と表示されます）。
 - モデルは `TEACHER_MODEL` で変更できます（既定は `claude-opus-5-5`）。
-- 先生の人柄や答え方は [`server/teacher/prompt.ts`](server/teacher/prompt.ts) の文章で決めています。
+- 先生の人柄や答え方は [`shared/teacher/prompt.ts`](shared/teacher/prompt.ts) の文章で決めています（サーバーとブラウザの両方が使います）。
 - 使いすぎ防止として、同じ相手からの質問は10分あたり30回までに制限しています（[`server/config.ts`](server/config.ts)）。
 
 画面だけを静的ホスティングに置くこともできます（その場合、先生は使えません）。画面と API を別の場所に置くときは、画面側に `VITE_API_BASE_URL`、API 側に `CORS_ORIGIN` を設定します。
@@ -81,7 +88,7 @@ shared/                画面・サーバー・ビルドが共通で使うもの
   appInfo.ts           アプリ名・説明・地の色（ここを変えると題名やホーム画面の名前に反映）
   bible/               聖書の型・箇所の表記・ふりがなの扱い
     translations/      翻訳ごとの書名と章数（いまは口語訳だけ）
-  teacher/contract.ts  パウロ先生の API の取り決め
+  teacher/             パウロ先生の取り決め（contract）・指示文（prompt）・Claude とのやりとり（stream）
 scripts/
   build-bible.ts       OSIS（XML）→ アプリ用 JSON の変換
 public/
@@ -91,7 +98,7 @@ pwa/                   ホーム画面への追加・オフライン対応
   vitePlugin.ts        index.html の置きかえ、manifest と sw.js の出力
   service-worker.js    サービスワーカーのひな形
 server/                パウロ先生の API（Hono）。本番では画面も配信する
-  teacher/             指示文（prompt）・本文の用意（passage）・中継（route）
+  teacher/             本文の用意（passage）・中継（route）
 src/
   app/                 画面の構成（ルーティング・タブバー）
   config/app.ts        先生の呼び名など、画面側の設定
@@ -161,6 +168,6 @@ npm run build:bible -- path/to/jpn-kougo.osis.xml
 | アプリ名         | 仮に「Your Ways」                                               | [`shared/appInfo.ts`](shared/appInfo.ts) の `APP_NAME`（題名・ホーム画面の名前・設定画面に反映）                                                                  |
 | 聖書の翻訳       | 口語訳                                                          | `shared/bible/translations/` に定義を足し、[`shared/bible/index.ts`](shared/bible/index.ts) の `translation` を切り替える。本文は `scripts/build-bible.ts` で生成 |
 | 開発技術         | Web アプリ（React + TypeScript + Vite）／API は Node.js（Hono） | —                                                                                                                                                                 |
-| 先生の呼び名     | パウロ先生                                                      | [`src/config/app.ts`](src/config/app.ts) の `TEACHER_NAME`、[`server/teacher/prompt.ts`](server/teacher/prompt.ts)                                                |
+| 先生の呼び名     | パウロ先生                                                      | [`src/config/app.ts`](src/config/app.ts) の `TEACHER_NAME`、[`shared/teacher/prompt.ts`](shared/teacher/prompt.ts)                                                |
 | 読みはじめの候補 | 9か所                                                           | [`src/features/guide/startingPoints.ts`](src/features/guide/startingPoints.ts)                                                                                    |
 | 人物の紹介       | 41人。同じ名前の人が複数いる場合は、決めつけずにそう伝える      | [`src/features/people/people.ts`](src/features/people/people.ts)                                                                                                  |

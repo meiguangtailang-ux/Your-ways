@@ -8,6 +8,9 @@ import type { PassageRef } from '../bible/types';
 
 export const TEACHER_API_PATH = '/api/teacher';
 
+/** パウロ先生に使う Claude のモデル（サーバーは環境変数 TEACHER_MODEL で変えられる） */
+export const TEACHER_MODEL = 'claude-opus-5-5';
+
 export const TEACHER_LIMITS = {
   /** 1回の会話で送れる発言の数 */
   maxMessages: 40,
@@ -32,6 +35,10 @@ export const TEACHER_ERROR_CODES = [
   'invalid_request',
   /** サーバーに API キーが設定されていない */
   'not_configured',
+  /** 先生を使うには、読者が自分の API キーを設定する必要がある（サーバーの無い公開版） */
+  'needs_key',
+  /** 読者が設定した API キーが受け付けられない */
+  'invalid_key',
   /** 短い時間に質問が多すぎる */
   'rate_limited',
   /** AI 側が混みあっている */

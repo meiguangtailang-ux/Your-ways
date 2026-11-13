@@ -2,10 +2,10 @@
  * パウロ先生への指示（システムプロンプト）と、本文の渡し方。
  * 先生の人柄や答え方を変えたいときは TEACHER_PERSONA を書き換える。
  */
-import { findBook, formatRef } from '../../shared/bible/reference';
-import { stripRuby } from '../../shared/bible/text';
-import { kougo } from '../../shared/bible/translations/kougo';
-import type { ChapterData, PassageRef } from '../../shared/bible/types';
+import { findBook, formatRef } from '../bible/reference';
+import { stripRuby } from '../bible/text';
+import { kougo } from '../bible/translations/kougo';
+import type { ChapterData, PassageRef } from '../bible/types';
 
 export const TEACHER_PERSONA = `あなたは「パウロ先生」です。日本語の聖書アプリの中で、読者がいま開いている聖書の箇所について質問に答える、AIの先生です。
 

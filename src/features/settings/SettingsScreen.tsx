@@ -6,6 +6,7 @@ import { APP_NAME, TEACHER_NAME } from '@/config/app';
 import { BackupSection } from '@/features/backup/BackupSection';
 import { GuideSheet } from '@/features/guide/GuideSheet';
 import { OfflineSection } from '@/features/offline/OfflineSection';
+import { TeacherKeySection } from '@/features/teacher/TeacherKeySection';
 import { DisplaySettings } from './DisplaySettings';
 import styles from './SettingsScreen.module.css';
 
@@ -19,6 +20,10 @@ export function SettingsScreen() {
 
       <Section title="表示">
         <DisplaySettings />
+      </Section>
+
+      <Section title={TEACHER_NAME}>
+        <TeacherKeySection />
       </Section>
 
       <Section title="オフライン">
@@ -47,7 +52,7 @@ export function SettingsScreen() {
           <dt>記録</dt>
           <dd>
             線・メモ・祈り・しおりは、この端末の中だけに保存されます。{TEACHER_NAME}
-            に質問したときだけ、その箇所と質問の内容が AI に送られます。
+            に質問したときだけ、その箇所の本文と質問の内容が AI（Anthropic）に送られます。
           </dd>
         </dl>
       </Section>

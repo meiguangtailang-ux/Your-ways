@@ -5,13 +5,30 @@ import {
   type TeacherEvent,
   type TeacherRequest,
 } from '@shared/teacher/contract';
-import { API_BASE_URL } from '@/config/app';
+import { API_BASE_URL, TEACHER_SERVER_AVAILABLE } from '@/config/app';
+import { getTeacherKey } from './teacherKey';
 
 /**
  * パウロ先生に質問を送り、返事を届いた順に受け取る。
+ * 読者が自分の API キーを入れていればブラウザから直接、無ければ API サーバーを通して話す。
  * 通信そのものの失敗は例外になる（中断したときの AbortError を含む）。
  */
 export async function* streamTeacherReply(
+  request: TeacherRequest,
+  signal: AbortSignal,
+): AsyncGenerator<TeacherEvent> {
+  const apiKey = getTeacherKey();
+  if (apiKey) {
+    const { streamWithOwnKey } = await import('./ownKeyTeacher');
+    yield* streamWithOwnKey(apiKey, request, signal);
+  } else if (TEACHER_SERVER_AVAILABLE) {
+    yield* streamFromServer(request, signal);
+  } else {
+    yield { type: 'error', code: 'needs_key' };
+  }
+}
+
+async function* streamFromServer(
   request: TeacherRequest,
   signal: AbortSignal,
 ): AsyncGenerator<TeacherEvent> {
