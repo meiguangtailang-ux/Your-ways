@@ -79,7 +79,7 @@ npm run dev            # 画面 http://localhost:5173 ／ API http://localhost:8
 - 先生の人柄や答え方は [`shared/teacher/prompt.ts`](shared/teacher/prompt.ts) の文章で決めています（サーバーとブラウザの両方が使います）。
 - 使いすぎ防止として、同じ相手からの質問は10分あたり30回までに制限しています（[`server/config.ts`](server/config.ts)）。
 
-画面だけを静的ホスティングに置くこともできます（その場合、先生は使えません）。画面と API を別の場所に置くときは、画面側に `VITE_API_BASE_URL`、API 側に `CORS_ORIGIN` を設定します。
+画面だけを静的ホスティングに置くこともできます（その場合、先生は読者が入れた API キーで動きます）。画面と API を別の場所に置くときは、画面側に `VITE_API_BASE_URL`、API 側に `CORS_ORIGIN` を設定します。
 
 ## 構成
 
